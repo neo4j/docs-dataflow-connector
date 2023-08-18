@@ -1,17 +1,150 @@
-= Docs template
+= Dataflow connector
 
-This is the main index page for your docs project.
+The Neo4j template for Google Dataflow allows to import data into a Neo4j database through a Dataflow job, sourcing data from either a BigQuery  dataset or Cloud Bucket csv files.
+It also allows to transform data before it is inserted into Neo4j.
 
-== Start page
+This tutorial guides you through importing an example BigQuery dataset into a Neo4j database using a Dataflow job.
 
-When you build your content locally, this page should be specified as the start page in _preview.yml_.
 
-[source, yaml, role=noheader]
+== Things you will need
+
+Here is the high-level list of the things you will need throughout the tutorial.
+The next few sections cover each item in more detail.
+
+- A running Neo4j instance
+- A Google account and a Google Cloud project
+- A Google Cloud Storage bucket https://console.cloud.google.com/storage/
+- A dataset to import (although this tutorial provides a public dataset to get you started)
+- A Google Dataflow https://console.cloud.google.com/dataflow/ project, in which you will create the Neo4j import job
+
+[NOTE]
+All google stuff should be on the same account or one that has access
+
+=== Neo4j instance
+
+You need a running Neo4j instance which the data can flow into.
+
+If you don't have an instance yet, you have two options:
+
+- sign-up for a free AuraDB https://neo4j.com/cloud/aura-free/ instance
+- install and self-host it in a location that is publicly accessible (see Neo4j -> Installation https://neo4j.com/docs/operations-manual/current/installation/) with port 7687 open (Bolt protocol)
+
+Either way, you then need to create a file containing your database connection information in JSON format.
+This file will go into your Cloud Storage bucket.
+
+.neo4j-connection-info.json
+[source, JSON]
 ----
-start_page: docs-template:ROOT:index.adoc
+{
+  "server_url": "neo4j+s://xxxx.databases.neo4j.io",
+  "database": "neo4j",
+  "username": "neo4j",
+  "pwd": "verysecret",
+  "auth_type": "basic"  // the only supported so far
+}
 ----
+
+
+=== Google Cloud Storage bucket
+
+You need a Cloud Storage bucket https://console.cloud.google.com/storage/.
+This is the one and only location from where the Dataflow job can source files (both configuration files and source CSVs, if any).
+
+Go ahead and upload `neo4j-connection-info.json` to your Cloud Storage bucket.
+
+
+=== Dataset to import
+
+You need a dataset that you want to import into Neo4j.
+This can be either a Google BigQuery https://console.cloud.google.com/bigquery dataset or a number of CSV files found in your Google Cloud Storage bucket.
+
+This tutorial uses a subset of the `movies` dataset.
+It contains entities `Person` and `Movie`, linked together by `DIRECTED` and `ACTED_IN` relationships.
+In other words, each `Person` may have `DIRECTED` and/or `ACTED_IN` a `Movie`.
+Both entities and relationships have extra details attached to each of them.
+
+[.shadow]
+image::movies-model.png[width=400]
 
 [TIP]
-====
-This repo contains example content such as asciidoc pages, re-usable fragments, and examples, to show where different types of files should be stored in an Antora project.
-====
+Since you are moving data from a relational database into a graph database, **the data model will have to change**.
+Checkout Graph data modeling guidelines https://neo4j.com/docs/getting-started/data-modeling/guide-data-modeling/ to learn how to model for graph databases.
+
+[NOTE]
+For importing CSV files into Neo4j, it can be easier and more efficient to use the Cypher clause LOAD CSV https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/, or to parse the CSV in your favorite language and use one of Neo4j's client libraries (drivers) https://neo4j.com/docs/create-applications/ to insert the data into the database.
+
+
+=== Google Dataflow job
+
+The Google Dataflow job https://console.cloud.google.com/dataflow is what joins all the pieces and performs the data import.
+All the work that is now needed is to craft a _job specification_ file that will provide Dataflow with all the information needed to perform the data load.
+
+[.shadow]
+image::google-dataflow.jpg[width=400]
+
+
+== Create a job specification file
+
+The job configuration file consists of a JSON object with four sections:
+
+- config -- global flags affecting how the import is performed
+- sources -- data source definitions (relational)
+- targets -- data target definitions (graph: nodes/relationships)
+- actions -- pre/post-load actions
+
+.Job specification JSON skeleton
+[source, JSON]
+----
+{
+  "config": {},
+  "sources": [
+    { ... }
+  ],
+  "targets": [
+    { ... }
+  ],
+  "actions": [
+    { ... }
+  ]
+}
+----
+
+At a high level, the job will fetch data from `sources` and transform/import them into the `targets`.
+It proceeds and fetches content from all sources (in order) before continuing to the import phase. (TRUE?)
+
+In the next sections, we build up the job specification file for the `movies` dataset, providing in-context information for each one.
+
+=== Configuration
+
+The `config` section contains global configuration for the import job. The flags it supports are:
+
+- `reset_db` (bool) -- whether to clear the database before importing.
+Deletes all data as well as indexes and constraints.
+- `index_all_properties` (bool) -- whether to create indexes for all properties. See Cypher -> Indexes for search performance https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/
+- `node/edge_write_batch_size` (int) -- how many nodes/edges to collect in a single query before submitting it as a transaction to Neo4j.
+- `node/edge_write_parallelism` (int) -- how many workers should work on each source/target in parallel.
+While nodes can be created independently one from another, edges require the database to acquire a lock on the connecting nodes.
+Because of this, setting `edge_write_parallelism` to a value larger than `1` may cause deadlocks.
+
+[source, JSON]
+----
+"config": {
+  "reset_db": false,
+  "index_all_properties": false,
+  "node_write_batch_size": 5000,
+  "edge_write_batch_size": 1000,
+  "node_write_parallelism": 10,
+  "edge_write_parallelism": 1
+}
+----
+
+=== sources
+
+=== targets
+
+=== pre/post load actions
+
+== Transformations
+
+[NOTE]
+Variables
