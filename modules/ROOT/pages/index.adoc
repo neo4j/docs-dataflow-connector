@@ -71,7 +71,7 @@ Since you are moving data from a relational database into a graph database, **th
 Checkout Graph data modeling guidelines https://neo4j.com/docs/getting-started/data-modeling/guide-data-modeling/ to learn how to model for graph databases.
 
 [NOTE]
-For importing CSV files into Neo4j, it can be easier and more efficient to use the Cypher clause LOAD CSV https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/, or to parse the CSV in your favorite language and use one of Neo4j's client libraries (drivers) https://neo4j.com/docs/create-applications/ to insert the data into the database.
+For importing CSV files into Neo4j, it can be easier and more efficient to use the Cypher clause `LOAD CSV` https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/, or to parse the CSV in your favorite language and use one of Neo4j's client libraries (drivers) https://neo4j.com/docs/create-applications/ to insert the data into the database.
 
 
 === Google Dataflow job
@@ -112,20 +112,168 @@ The job configuration file consists of a JSON object with four sections:
 At a high level, the job will fetch data from `sources` and transform/import them into the `targets`.
 It proceeds and fetches content from all sources (in order) before continuing to the import phase. (TRUE?)
 
-In the next sections, we build up the job specification file for the `movies` dataset, providing in-context information for each one.
+Here below you can find an example job specification file that works out of the box to import the `movies` dataset.
+In the next sections, we break it down and provide in-context information for each part.
+
+[source, json]
+----
+{
+  "config": {
+    "debug": true,
+    "reset_db": true,
+    "index_all_properties": false,
+    "node_write_batch_size": 5000,
+    "edge_write_batch_size": 1000,
+    "node_write_parallelism": 10,
+    "edge_write_parallelism": 1
+  },
+  "sources": [
+    {
+      "type": "bigquery",
+      "name": "movies",
+      "query": "SELECT movieId, title FROM team-connectors-dev.movies.movies WHERE movieId IS NOT NULL"
+    },
+    {
+      "type": "bigquery",
+      "name": "persons",
+      "query": "SELECT person_tmdbId, name FROM team-connectors-dev.movies.persons WHERE person_tmdbId IS NOT NULL"
+    },
+    {
+      "type": "bigquery",
+      "name": "directed",
+      "query": "SELECT movieId, person_tmdbId FROM team-connectors-dev.movies.directed WHERE person_tmdbId IS NOT NULL AND movieId IS NOT NULL"
+    },
+    {
+      "type": "bigquery",
+      "name": "acted_in",
+      "query": "SELECT movieId, person_tmdbId, role FROM team-connectors-dev.movies.acted_in WHERE person_tmdbId IS NOT NULL AND movieId IS NOT NULL"
+    }
+  ],
+  "targets": [
+    {
+      "node": {
+        "source": "movies",
+        "name": "Movies",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "labels": [
+            "\"Movie\""
+          ],
+          "keys": [
+            {"movieId": "movieId"}
+          ],
+          "properties": {
+            "unique": [],
+            "indexed": [
+              {"title": "title"}
+            ],
+            "strings": []
+          }
+        }
+      }
+    },
+    {
+      "node": {
+        "source": "persons",
+        "name": "Person",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "labels": [
+            "\"Person\""
+          ],
+          "keys": [
+            {"person_tmdbId": "person_tmdbId"}
+          ],
+          "properties": {
+            "unique": [],
+            "indexed": [
+              {"name": "name"}
+            ],
+            "strings": [],
+            "longs": []
+          }
+        }
+      }
+    },
+    {
+      "edge": {
+        "source": "directed",
+        "name": "Directed",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "type": "\"DIRECTED\"",
+          "source": {
+            "label": "\"Person\"",
+            "key": "person_tmdbId"
+          },
+          "target": {
+            "label": "\"Movie\"",
+            "key": "movieId"
+          },
+          "properties": {
+            "unique": [],
+            "indexed": [],
+            "strings": [],
+            "longs": []
+          }
+        }
+      }
+    },
+    {
+      "edge": {
+        "source": "acted_in",
+        "name": "Acted_in",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "type": "\"ACTED_IN\"",
+          "source": {
+            "label": "\"Person\"",
+            "key": "person_tmdbId"
+          },
+          "target": {
+            "label": "\"Movie\"",
+            "key": "movied"
+          },
+          "properties": {
+            "unique": [],
+            "indexed": [],
+            "strings": [
+              {"role": "role"}
+            ],
+            "longs": []
+          }
+        }
+      }
+    }
+  ]
+}
+----
 
 === Configuration
 
-The `config` section contains global configuration for the import job. The flags it supports are:
+The `config` object contains global configuration for the import job. The flags it supports are:
 
 - `reset_db` (bool) -- whether to clear the database before importing.
 Deletes all data as well as indexes and constraints.
 - `index_all_properties` (bool) -- whether to create indexes for all properties. See Cypher -> Indexes for search performance https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/
 - `node/edge_write_batch_size` (int) -- how many nodes/edges to collect in a single query before submitting it as a transaction to Neo4j.
-- `node/edge_write_parallelism` (int) -- how many workers should work on each source/target in parallel.
-While nodes can be created independently one from another, edges require the database to acquire a lock on the connecting nodes.
+- `node/edge_write_parallelism` (int) -- how many workers should work on each source/target in parallel. +
+Note that, while nodes can be created independently one from another, edges require the database to acquire a lock on the connecting nodes.
 Because of this, setting `edge_write_parallelism` to a value larger than `1` may cause deadlocks.
 
+.Configuration settings and their defaults
 [source, JSON]
 ----
 "config": {
@@ -138,13 +286,122 @@ Because of this, setting `edge_write_parallelism` to a value larger than `1` may
 }
 ----
 
-=== sources
+=== Sources
 
-=== targets
+The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `one table <=> one source`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
 
-=== pre/post load actions
+Each source object can be of either type `bigquery` or `text`, depending on whether you want to import from a BigQuery dataset or CSV data. Regardless of type, each source must get a `name`, which the targets will later use to refer to it.
 
-== Transformations
+==== BigQuery dataset
+
+To import a BigQuery dataset, three attributes are compulsory.
+
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "movies",
+  "query": "SELECT movieId, title FROM team-connectors-dev.movies.movies WHERE movieId IS NOT NULL"
+}
+----
+
+- `type` (string) -- `bigquery`.
+- `name` (string) -- a human-friendly label for the source. You will use this to reference the source in the targets section.
+- `query` (string) -- the dataset to extract from BigQuery, as an SQL query. Notice that a) the source BigQuery table can have more columns than what you select in the query; b) multiple targets can use the same source, even filtering it for a subset of columns.
+
+==== CSV data
+
+To import data from a CSV file, six attributes are compulsory. Notice that **the parser does not support headers in CSV files**, which should contain data rows only.
+
+[source, json]
+----
+{
+  "type": "text",
+  "name": "movies",
+  "uri": "<path-to-movies-csv>",
+  "format": "EXCEL",
+  "delimiter": ",",
+  "ordered_field_names": "movieId,title"
+}
+----
+
+- `type` (string) -- `text`.
+- `name` (string) -- a human-friendly label for the source. You will use this to reference the source in the targets section.
+- `uri` (string) -- the Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
+- `format` (string) -- any of Apache's `CSVFormat` predefined formats. https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html
+- `delimiter` (string) -- CSV field delimiter.
+- `ordered_field_names` (string) -- list of field names the CSV file contains, in order.
+
+=== Targets
+
+The `targets` section contains the definitions of the graph entities that will result from the import. Each object is keyed as either `node` or `edge` (synonym for _relationship_) and will generate a corresponding entity in Neo4j drawing data from a source.
+
+
+
+==== Node objects
+
+Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `mappings.keys`.
+
+[source, json]
+----
+{
+  "node": {
+    "source": "movies",
+    "name": "Movies",
+    "mode": "merge",
+    "transform": {
+      "group": true
+    },
+    "mappings": {
+      "labels": [
+        "\"Movie\""
+      ],
+      "keys": [
+        {"movieId": "movie_id"}
+      ],
+      "properties": {
+        "unique": [],
+        "indexed": [
+          {"title": "title"}
+        ],
+        "strings": []
+      }
+    }
+  }
+}
+----
+
+- `**source**` (string) -- the name of the source this target should draw data from.
+- `name` (string) -- a human-friendly name for the target (needed?).
+- `mode` (string) -- the creation mode in Neo4j. Either `merge` (default?) or `create`. See Cypher -> `MERGE` and Cypher -> `CREATE` for info.
+- `mappings` (object) -- details on how the source columns should be mapped into node details.
+* `**labels**` (list of strings) -- labels to mark the nodes with https://medium.com/neo4j/graph-modeling-labels-71775ff7d121. Note that they should be surrounded by quotes (and escaped if necessary).
+* `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node key constraint.
+* `properties` (object) -- mapping of source columns into node properties.
+** `unique` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node uniqueness constraint.
+** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ that  should get an index on the corresponding node property (pointless if `index_all_properties: true` in config).
+** `string`, `long` (list of objects) -- source columns that should be mapped into node properties. The data type affects how the data is represented into Neo4j, but does not create type constraints.
+
+The objects in `keys`, `unique`, `indexed`, and all the type properties (`string`, `long`, etc) have the format
+
+[source, json]
+----
+{"<column-name-in-source>": "<wished-node-property-name>"}
+----
+
+For example, `{"movieId": "movie_id"}` will map the source column `movieId` to the property `movie_id` in the new nodes.
+
+Things to pay attention to:
+
+- **make sure to quote and escape labels**. If you don't quote a label, it is considered as a dynamic value, which should be provided in the `Options JSON` when running the Dataflow job.
+- **names in `keys` should not also be in `unique`**, or the constraints will conflict.
+
+
+=== Pre/Post load actions
+
+=== Transformations
 
 [NOTE]
 Variables
+
+== CLI
