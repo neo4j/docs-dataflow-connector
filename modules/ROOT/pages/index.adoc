@@ -119,7 +119,6 @@ In the next sections, we break it down and provide in-context information for ea
 ----
 {
   "config": {
-    "debug": true,
     "reset_db": true,
     "index_all_properties": false,
     "node_write_batch_size": 5000,
