@@ -377,9 +377,11 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
 }
 ----
 
-- `**source**` (string) -- the name of the source this target should draw data from.
-- `name` (string) -- a human-friendly name for the target (needed?).
-- `mode` (string) -- the creation mode in Neo4j. Either `merge` (default?) or `create`. See Cypher -> `MERGE` and Cypher -> `CREATE` for info.
+- `**source**` (string) -- the name of the data source this target should draw data from.
+The data source must be defined in this job specification file.
+- `name` (string) -- a human-friendly name for the target.
+The name must be unique across all the targets of this job specification file.
+- `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See Cypher -> `MERGE` and Cypher -> `CREATE` for info.
 - `mappings` (object) -- details on how the source columns should be mapped into node details.
 * `**labels**` (list of strings) -- labels to mark the nodes with https://medium.com/neo4j/graph-modeling-labels-71775ff7d121. Note that they should be surrounded by quotes (and escaped if necessary).
 * `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node key constraint.
@@ -400,7 +402,7 @@ For example, `{"movieId": "movie_id"}` will map the source column `movieId` to t
 
 Things to pay attention to:
 
-- **make sure to quote and escape labels**. If you don't quote a label, it is considered as a dynamic value, which should be provided in the `Options JSON` when running the Dataflow job.
+- **make sure to quote and escape labels**. If you don't quote a label, it is considered as a dynamic value, which is interpreted as the corresponding column value of the current row when running the Dataflow job.
 - **names in `keys` should not also be in `unique`**, or the constraints will conflict.
 - **source data must not have null values for `keys` columns**, or they will clash with the node key constraint. If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE movieId IS NOT NULL`).
 - if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
