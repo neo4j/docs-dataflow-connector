@@ -446,8 +446,9 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
 ----
 
 - `**source**` (string) -- the name of the source this target should draw data from.
-- `name` (string) -- a human-friendly name for the target (needed?).
-- `mode` (string) -- the creation mode in Neo4j. Either `merge` (default?) or `create`. See Cypher -> `MERGE` and Cypher -> `CREATE` for info.
+- `name` (string) -- a human-friendly name for the target.
+The name must be unique across all the targets of this job specification file.
+- `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See Cypher -> `MERGE` and Cypher -> `CREATE` for info.
 - `mappings` (object) -- details on how the source columns should be mapped into node details.
 * `**type**` (string) -- type to assign to the relationship . Note that it should be surrounded by quotes (and escaped if necessary).
 * `**source**` (object) -- starting node for the relationship (identified by node label and key).
@@ -469,7 +470,7 @@ For example, `{"role": "role"}` will map the source column `role` to the propert
 
 Things to pay attention to:
 
-- **make sure to quote and escape relationship types and node labels**. If you don't quote constants, they are considered as dynamic values, which should be provided in the `Options JSON` when running the Dataflow job.
+- **make sure to quote and escape relationship types and node labels**. If you don't quote constants, they are considered as dynamic values, which is interpreted as the corresponding column value of the current row when running the Dataflow job.
 - if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
 
 == Transformations
