@@ -326,6 +326,7 @@ To import data from a CSV file, six attributes are compulsory.
 
 - `type` (string) -- `text`.
 - `name` (string) -- a human-friendly label for the source. You will use this to reference the source in the targets section.
+The name must be unique across all the sources of the job specification file.
 - `uri` (string) -- the Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
 - `format` (string) -- any of Apache's `CSVFormat` predefined formats. https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html
 - `delimiter` (string) -- CSV field delimiter.
