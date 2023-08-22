@@ -110,7 +110,7 @@ The job configuration file consists of a JSON object with four sections:
 ----
 
 At a high level, the job will fetch data from `sources` and transform/import them into the `targets`.
-It proceeds and fetches content from all sources (in order) before continuing to the import phase. (TRUE?)
+It proceeds and fetches content from all sources (in order) before continuing to the import phase by default.
 
 Here below you can find an example job specification file that works out of the box to import the `movies` dataset.
 In the next sections, we break it down and provide in-context information for each part. We recommend reading this guide side by side with the job specification example.
