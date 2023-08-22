@@ -493,13 +493,13 @@ The following example shows how the aggregations would work on a fictitious data
       "field": "total_quantity_sold"
     }
   ],
-  "limit": -1
+  "limit": 50
 }
 ----
 
 - `group` (bool) -- must be `true` for aggregations to work.
 - `aggregations` (list of objects) -- aggregation functions are specified as SQL queries in the `expr` attribute, and the result is available under the name specified in `field`.
-- `limit` (int) -- rows limit on data?
+- `limit` (int) -- append a `LIMIT` clause (here `LIMIT 50`) to the generated SQL query that fetches the source data (defaults to no limit, encoded into -1).
 
 == Pre/Post load actions
 
