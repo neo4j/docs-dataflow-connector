@@ -583,4 +583,4 @@ curl -X POST "https://Dataflow.googleapis.com/v1b3/projects/neo4jbusinessdev/loc
 ----
 
 The `cli-script` folder in Neo4j Dataflow Template repository contains some example invocations.
-https://github.com/GoogleCloudPlatform/DataflowTemplates/tree/main/v2/googlecloud-to-neo4j/docs/cli-scripts/dataflow-test
+https://github.com/GoogleCloudPlatform/DataflowTemplates/tree/main/v2/googlecloud-to-neo4j/docs/cli-scripts/dataflow-test .
