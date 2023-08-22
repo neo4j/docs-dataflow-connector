@@ -549,8 +549,6 @@ For production use cases it is common to supply date ranges or parameters based 
 
 Variables must be escaped with the `$` symbol (ex. `$limit`).  Replaceable tokens can appear in job specification files or in readQuery or inputFilePattern (source URI) command-line parameters or in action options or headers.
 
-Is this all?
-
 = CLI invocations
 
 You can script execution of Dataflow jobs using the Google Cloud CLI https://cloud.google.com/dataflow/docs/guides/templates/using-flex-templates . Executing a job through the CLI is functionally equivalent to using the Dataflow user interface. Accepting the defaults yields a very minimalistic script:
