@@ -530,8 +530,8 @@ The `actions` section contains commands that can be run before or after specific
 * `nodes` -- after all node objects have been imported
 * `edges` -- after all edge objects have been imported
 * `loads` -- after all entities (nodes+edges) have been imported
-* `preloads` -- ?
-* `source/node/edge/action` -- after a specific source or node or edge or action object has been run
+* `preloads` -- after all actions executing after `start` have run
+* `source/node/edge/action` -- after a specific source or node or edge or action object has been run, to be used in conjunction with `execute_after_name`
 - `execute_after_name` (string) -- after which `source`/`node`/`edge`/`action` object the step should run.
 - `type` (string) -- what action to run. Valid values are:
 * `http_post` -- HTTP POST request (requires a `url` option)
