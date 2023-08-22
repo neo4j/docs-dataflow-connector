@@ -264,8 +264,8 @@ In the next sections, we break it down and provide in-context information for ea
 
 The `config` object contains global configuration for the import job. The flags it supports are:
 
-- `reset_db` (bool) -- whether to clear the database before importing.
-Deletes all data as well as indexes and constraints.
+- `reset_db` (bool) -- whether to recreate the database before importing.
+If the recreation fails, this falls back to deleting all data, as well as indexes and constraints via https://neo4j.com/labs/apoc/4.4/overview/apoc.schema/apoc.schema.assert/[apoc.schema.assert].
 - `index_all_properties` (bool) -- whether to create indexes for all properties. See Cypher -> Indexes for search performance https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/
 - `node/edge_write_batch_size` (int) -- how many nodes/edges to collect in a single query before submitting it as a transaction to Neo4j.
 - `node/edge_write_parallelism` (int) -- how many workers should work on each source/target in parallel. +
