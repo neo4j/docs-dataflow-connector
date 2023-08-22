@@ -88,7 +88,7 @@ image::google-dataflow.jpg[width=400]
 The job configuration file consists of a JSON object with four sections:
 
 - config -- global flags affecting how the import is performed
-- sources -- data source definitions (relational)
+- source or sources -- data source definition(s) (relational)
 - targets -- data target definitions (graph: nodes/relationships)
 - actions -- pre/post-load actions
 
