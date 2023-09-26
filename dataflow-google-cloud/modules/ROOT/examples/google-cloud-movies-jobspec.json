@@ -5,52 +5,39 @@
   },
   "sources": [
     {
-      "type": "bigquery",
-      "name": "movies",
-      "query": "SELECT movieId, title FROM team-connectors-dev.movies.movies"
-    },
-    {
-      "type": "bigquery",
+      "type": "text",
       "name": "persons",
-      "query": "SELECT person_tmdbId, name FROM team-connectors-dev.movies.persons"
+      "uri": "gs://neo4j-examples/persons.csv",
+      "format": "EXCEL",
+      "delimiter": ",",
+      "ordered_field_names": "person_tmdbId,bio,born,bornIn,died,person_imdbId,name,person_poster,person_url"
     },
     {
-      "type": "bigquery",
+      "type": "text",
+      "name": "movies",
+      "uri": "gs://neo4j-examples/movies.csv",
+      "format": "EXCEL",
+      "delimiter": ",",
+      "ordered_field_names": "movieId,title,budget,countries,movie_imdbId,imdbRating,imdbVotes,languages,plot,movie_poster,released,revenue,runtime,movie_tmdbId,movie_url,year,genres"
+    },
+    {
+      "type": "text",
       "name": "directed",
-      "query": "SELECT movieId, person_tmdbId FROM team-connectors-dev.movies.directed"
+      "uri": "gs://neo4j-examples/directed.csv",
+      "format": "EXCEL",
+      "delimiter": ",",
+      "ordered_field_names": "movieId,person_tmdbId"
     },
     {
-      "type": "bigquery",
+      "type": "text",
       "name": "acted_in",
-      "query": "SELECT movieId, person_tmdbId, role FROM team-connectors-dev.movies.acted_in"
+      "uri": "gs://neo4j-examples/acted_in.csv",
+      "format": "EXCEL",
+      "delimiter": ",",
+      "ordered_field_names": "movieId,person_tmdbId,role"
     }
   ],
   "targets": [
-    {
-      "node": {
-        "source": "movies",
-        "name": "Movies",
-        "mode": "merge",
-        "transform": {
-          "group": true
-        },
-        "mappings": {
-          "labels": [
-            "\"Movie\""
-          ],
-          "keys": [
-            {"movieId": "movie_id"}
-          ],
-          "properties": {
-            "unique": [],
-            "indexed": [
-              {"title": "title"}
-            ],
-            "strings": []
-          }
-        }
-      }
-    },
     {
       "node": {
         "source": "persons",
@@ -71,7 +58,41 @@
             "indexed": [
               {"name": "name"}
             ],
-            "strings": []
+            "strings": [
+              {"bornIn": "born_in"}
+            ],
+            "dates": [
+              {"born": "born"},
+              {"died": "died"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "node": {
+        "source": "movies",
+        "name": "Movies",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "labels": [
+            "\"Movie\""
+          ],
+          "keys": [
+            {"movieId": "movie_id"}
+          ],
+          "properties": {
+            "unique": [],
+            "indexed": [
+              {"title": "title"}
+            ],
+            "floats": [
+              {"imdbRating": "rating"},
+              {"year": "year"}
+            ]
           }
         }
       }
@@ -88,17 +109,13 @@
           "type": "\"DIRECTED\"",
           "source": {
             "label": "\"Person\"",
-            "key": "person_id"
+            "key": "person_tmdbId"
           },
           "target": {
             "label": "\"Movie\"",
-            "key": "movie_id"
+            "key": "movieId"
           },
-          "properties": {
-            "unique": [],
-            "indexed": [],
-            "strings": []
-          }
+          "properties": {}
         }
       }
     },
@@ -114,15 +131,13 @@
           "type": "\"ACTED_IN\"",
           "source": {
             "label": "\"Person\"",
-            "key": "person_id"
+            "key": "person_tmdbId"
           },
           "target": {
             "label": "\"Movie\"",
-            "key": "movie_id"
+            "key": "movieId"
           },
           "properties": {
-            "unique": [],
-            "indexed": [],
             "strings": [
               {"role": "role"}
             ]

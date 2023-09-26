@@ -1,5 +1,5 @@
-name: dataflow-template
-title: Neo4j Google Dataflow Template
+name: dataflow-google-cloud
+title: Neo4j Google Cloud Connector (via Dataflow)
 version: '1.0'
 # display_version: '1.0-preview'
 start_page: ROOT:index.adoc

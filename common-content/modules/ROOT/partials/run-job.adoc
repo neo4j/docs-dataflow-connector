@@ -1,0 +1,15 @@
+= Run an import job
+
+Once the job specification is ready, upload its json file to your Cloud Storage bucket and go to link:https://console.cloud.google.com/dataflow/createjob[Dataflow -> Create job from template].
+
+To create a job, specify the following fields:
+
+- Job name -- a human-friendly name for the job
+- Regional endpoint -- must match the region of your Google Cloud Storage bucket
+- Dataflow template -- select `Google Cloud to Neo4j`
+- Path to job configuration file -- the json job specification file (from Cloud storage buckets)
+- Path to Neo4j connection metadata -- the json connection information file (from Cloud storage buckets)
+- Options JSON -- values for variables used in the job specification file (or `{}` for none)
+
+[.shadow]
+image::{common}:image$dataflow-job-example.png[width=600]

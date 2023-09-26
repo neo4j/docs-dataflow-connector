@@ -1,0 +1,35 @@
+= CLI invocations
+
+You can script execution of Dataflow jobs using the link:https://cloud.google.com/dataflow/docs/guides/templates/using-flex-templates[Google Cloud CLI]. Executing a job through the CLI is functionally equivalent to using the Dataflow user interface. Accepting the defaults yields a very minimalistic script:
+
+[source, bash]
+----
+export REGION=us-central1
+gcloud dataflow flex-template run "test-bq-cli-`date +%Y%m%d-%H%M%S`" \
+  --template-file-gcs-location="gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j" \
+  --region "$REGION" \
+  --parameters jobSpecUri="<URI-to-job-specification-JSON-file>" \
+  --parameters neo4jConnectionUri="<URI-to-neo4j-connection-JSON-file>"
+----
+
+The REST version looks like this:
+
+[source, bash]
+----
+export REGION=us-central1
+curl -X POST "https://Dataflow.googleapis.com/v1b3/projects/<project-name>/locations/$REGION/flexTemplates:launch" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $(gcloud auth print-access-token)" \
+-d '{
+   "launch_parameter": {
+      "jobName": "test-bq-rest-'$(date +%Y%m%d-%H%M%S)'",
+      "parameters": {
+        "jobSpecUri": "<URI-to-job-specification-JSON-file>",
+        "neo4jConnectionUri": "<URI-to-neo4j-connection-JSON-file>"
+      },
+   "containerSpecGcsPath": "gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j"
+   }
+}'
+----
+
+The `cli-script` folder in the link:https://github.com/GoogleCloudPlatform/DataflowTemplates/tree/main/v2/googlecloud-to-neo4j/docs/cli-scripts/dataflow-test[Neo4j Dataflow Template repository] contains some example invocations.

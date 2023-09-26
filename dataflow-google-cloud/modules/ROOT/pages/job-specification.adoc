@@ -1,0 +1,65 @@
+= Create a job specification file
+
+
+include::{common}:partial$job-specification.adoc[tags=intro]
+
+
+Here below you can find an example job specification file that works out of the box to import the publicly-available `movies` dataset.
+In the next sections, we break it down and provide in-context information for each part. We recommend reading this guide side by side with the job specification example.
+
+[source, json]
+----
+include::../examples/google-cloud-movies-jobspec.json[]
+----
+
+
+include::{common}:partial$job-specification.adoc[tags=configuration]
+
+
+== Sources
+
+The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
+
+To import data from a CSV file, six attributes are compulsory.
+
+[source, json]
+----
+{
+  "type": "text",
+  "name": "movies",
+  "uri": "<path-to-csv>",
+  "format": "EXCEL",
+  "delimiter": ",",
+  "ordered_field_names": "movieId,title"
+}
+----
+
+- `type` (string) -- `text`.
+- `name` (string) -- a human-friendly label for the source (unique among all sources). You will use this to reference the source in the targets section.
+- `uri` (string) -- the Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
+- `format` (string) -- any of link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`] predefined formats.
+- `delimiter` (string) -- CSV field delimiter.
+- `ordered_field_names` (string) -- list of field names the CSV file contains, in order.
+
+.How to retrieve the Google Storage location of a file?
+[%collapsible]
+====
+To retrieve the Google Storage location of a file in a Cloud bucket, expand the file options through the three dots on the right, and choose `Copy gsutil URI`.
+
+[.shadow]
+image::image$google-cloud-file-url.png[width=600]
+====
+
+CSV files must fulfill some constraints:
+
+- **they should not contain headers**. Column names should be specified in the `ordered_field_names` attributes, and files should contain data rows only.
+- they should not contain empty rows.
+
+
+include::{common}:partial$job-specification.adoc[tags=targets]
+
+include::{common}:partial$job-specification.adoc[tags=transformations]
+
+include::{common}:partial$job-specification.adoc[tags=actions]
+
+include::{common}:partial$job-specification.adoc[tags=variables]

@@ -1,0 +1,24 @@
+= Neo4j BigQuery Connector (via Dataflow)
+
+The Neo4j BigQuery Connector allows to import data from a BigQuery dataset into a Neo4j database, through a Dataflow job.
+It also allows to manipulate and transform the data at various steps of the import.
+You can use the template for both first-time and incremental imports.
+
+This guide walks you through how to import an example BigQuery dataset into a Neo4j database using a Dataflow job. It also provides a public dataset you can experiment with, before you go on and create an import job for you own dataset.
+
+
+[discrete]
+== Things you will need
+
+Here is the high-level list of the things you will need to run an import
+
+- A running Neo4j instance
+- A Google account and a Google Cloud project
+- A link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket
+- A link:https://console.cloud.google.com/bigquery[Google BigQuery] dataset to import
+- A link:https://console.cloud.google.com/dataflow/[Google Dataflow] project
+
+Head to xref:prerequisites.adoc[] to find more details about each of them.
+
+[NOTE]
+All Google-related resources (Cloud project, Cloud Storage buckets, Dataflow job) should either belong to the same account, or to one which the Dataflow job has permissions to access.

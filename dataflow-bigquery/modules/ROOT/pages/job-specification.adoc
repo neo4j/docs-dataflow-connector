@@ -1,0 +1,48 @@
+= Create a job specification file
+
+
+include::{common}:partial$job-specification.adoc[tags=intro]
+
+
+Here below you can find an example job specification file that works out of the box to import the publicly-available `movies` dataset.
+In the next sections, we break it down and provide in-context information for each part. We recommend reading this guide side by side with the job specification example.
+
+[source, json]
+----
+include::example$bigquery-movies-jobspec.json[]
+----
+
+
+include::{common}:partial$job-specification.adoc[tags=configuration]
+
+
+== Sources
+
+The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
+
+To import a BigQuery dataset, three attributes are compulsory.
+
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "movies",
+  "query": "SELECT movieId, title FROM team-connectors-dev.movies.movies"
+}
+----
+
+- `type` (string) -- `bigquery`.
+- `name` (string) -- a human-friendly label for the source (unique among all sources). You will use this to reference the source in the targets section.
+- `query` (string) -- the dataset to extract from BigQuery, as an SQL query. Notice that:
+
+  1. the source BigQuery table can have more columns than what you select in the query;
+  2. multiple targets can use the same source, even filtering it for a subset of columns.
+
+
+include::{common}:partial$job-specification.adoc[tags=targets]
+
+include::{common}:partial$job-specification.adoc[tags=transformations]
+
+include::{common}:partial$job-specification.adoc[tags=actions]
+
+include::{common}:partial$job-specification.adoc[tags=variables]

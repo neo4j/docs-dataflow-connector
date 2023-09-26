@@ -1,0 +1,137 @@
+{
+  "config": {
+    "reset_db": true,
+    "index_all_properties": false
+  },
+  "sources": [
+    {
+      "type": "bigquery",
+      "name": "persons",
+      "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons"
+    },
+    {
+      "type": "bigquery",
+      "name": "movies",
+      "query": "SELECT movieId, title, imdbRating, year FROM team-connectors-dev.movies.movies"
+    },
+    {
+      "type": "bigquery",
+      "name": "directed",
+      "query": "SELECT movieId, person_tmdbId FROM team-connectors-dev.movies.directed"
+    },
+    {
+      "type": "bigquery",
+      "name": "acted_in",
+      "query": "SELECT movieId, person_tmdbId, role FROM team-connectors-dev.movies.acted_in"
+    }
+  ],
+  "targets": [
+    {
+      "node": {
+        "source": "persons",
+        "name": "Person",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "labels": [
+            "\"Person\""
+          ],
+          "keys": [
+            {"person_tmdbId": "person_id"}
+          ],
+          "properties": {
+            "unique": [],
+            "indexed": [
+              {"name": "name"}
+            ],
+            "strings": [
+              {"bornIn": "born_in"}
+            ],
+            "dates": [
+              {"born": "born"},
+              {"died": "died"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "node": {
+        "source": "movies",
+        "name": "Movies",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "labels": [
+            "\"Movie\""
+          ],
+          "keys": [
+            {"movieId": "movie_id"}
+          ],
+          "properties": {
+            "unique": [],
+            "indexed": [
+              {"title": "title"}
+            ],
+            "floats": [
+              {"imdbRating": "rating"},
+              {"year": "year"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "edge": {
+        "source": "directed",
+        "name": "Directed",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "type": "\"DIRECTED\"",
+          "source": {
+            "label": "\"Person\"",
+            "key": "person_tmdbId"
+          },
+          "target": {
+            "label": "\"Movie\"",
+            "key": "movieId"
+          },
+          "properties": {}
+        }
+      }
+    },
+    {
+      "edge": {
+        "source": "acted_in",
+        "name": "Acted_in",
+        "mode": "merge",
+        "transform": {
+          "group": true
+        },
+        "mappings": {
+          "type": "\"ACTED_IN\"",
+          "source": {
+            "label": "\"Person\"",
+            "key": "person_tmdbId"
+          },
+          "target": {
+            "label": "\"Movie\"",
+            "key": "movieId"
+          },
+          "properties": {
+            "strings": [
+              {"role": "role"}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
