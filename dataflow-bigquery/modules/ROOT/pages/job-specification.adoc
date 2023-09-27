@@ -4,9 +4,6 @@
 include::{common}:partial$job-specification.adoc[tags=intro]
 
 
-Here below you can find an example job specification file that works out of the box to import the publicly-available `movies` dataset.
-In the next sections, we break it down and provide in-context information for each part. We recommend reading this guide side by side with the job specification example.
-
 [source, json]
 ----
 include::example$bigquery-movies-jobspec.json[]

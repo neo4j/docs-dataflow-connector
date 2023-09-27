@@ -106,7 +106,7 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
 - `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[Cypher -> `MERGE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[Cypher -> `CREATE`] for info.
 - `mappings` (object) -- details on how the source columns should be mapped into node details.
 * `**labels**` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[labels] to mark the nodes with. Note that they should be quoted and escaped.
-* `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node key constraint.
+* `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node key constraint. These get mapped to string properties.
 * `properties` (object) -- mapping of source columns into node properties.
 ** `unique` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node uniqueness constraint. These get mapped to string properties.
 ** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ that  should get an index on the corresponding node property. These get mapped to string properties.
@@ -241,13 +241,15 @@ The following example shows how the aggregations would work on a fictitious data
       "field": "total_quantity_sold"
     }
   ],
-  "limit": 50
+  "limit": 50,
+  "where": "person_tmbdId IS NOT NULL"
 }
 ----
 
-- `group` (bool) -- must be `true` for aggregations to work.
+- `group` (bool) -- must be `true` for `aggregations`/`where` to work.
 - `aggregations` (list of objects) -- aggregation functions are specified as SQL queries in the `expr` attribute, and the result is available under the name specified in `field`.
-- `limit` (int) -- append a `LIMIT` clause (here `LIMIT 50`) to the generated SQL query that fetches the source data (defaults to no limit, encoded as `-1`).
+- `limit` (int) -- caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
+- `where` (string) -- filters out source data prior to import (with an SQL `WHERE` clause format).
 end::transformations[]
 
 

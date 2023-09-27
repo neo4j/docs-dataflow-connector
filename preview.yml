@@ -5,8 +5,8 @@ site:
 
 content:
   sources:
-  - url: https://github.com/neo4j/docs-dataflow-connector.git
-    branches: ['main']
+  - url: ./
+    branches: HEAD
     start_paths:
     - dataflow-google-cloud
     - dataflow-bigquery
