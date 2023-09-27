@@ -10,7 +10,7 @@ content:
     start_paths:
     - dataflow-google-cloud
     - dataflow-bigquery
-    - common-content
+    - common-content-dataflow
     exclude:
     - '!**/_includes/*'
     - '!**/readme.adoc'
@@ -61,5 +61,5 @@ asciidoc:
     cross-mark: icon:times[]
     neo4j-base-uri: https://neo4j.com
     neo4j-docs-base-uri: https://neo4j.com/docs
-    common: common-content:ROOT@
+    common: common-content-dataflow:ROOT@
 
