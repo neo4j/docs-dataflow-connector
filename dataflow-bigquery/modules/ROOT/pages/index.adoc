@@ -1,3 +1,5 @@
+:page-role: beta
+
 = Neo4j BigQuery Connector (via Dataflow)
 
 The Neo4j BigQuery Connector allows to import data from a BigQuery dataset into a Neo4j database, through a Dataflow job.

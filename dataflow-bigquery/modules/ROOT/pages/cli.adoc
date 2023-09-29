@@ -1,1 +1,3 @@
+:page-role: beta
+
 include::{common}:partial$cli.adoc[]

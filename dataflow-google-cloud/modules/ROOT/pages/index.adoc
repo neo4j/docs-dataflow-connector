@@ -1,3 +1,5 @@
+:page-role: beta
+
 = Neo4j Google Cloud Connector (via Dataflow)
 
 The Neo4j Google Cloud Connector allows to import a dataset into a Neo4j database through a Dataflow job, sourcing data from CSV files hosted in Google Cloud Storage buckets.

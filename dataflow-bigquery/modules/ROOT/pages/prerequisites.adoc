@@ -1,3 +1,5 @@
+:page-role: beta
+
 = Prerequisites
 
 include::{common}:partial$prerequisites.adoc[tags=neo4j]
