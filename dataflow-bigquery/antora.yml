@@ -1,5 +1,5 @@
 name: dataflow-bigquery
-title: Neo4j Bigquery Connector (via Dataflow)
+title: Bigquery to Neo4j
 version: ~
 # display_version: '1.0-preview'
 start_page: ROOT:index.adoc
