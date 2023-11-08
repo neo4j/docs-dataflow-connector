@@ -181,6 +181,7 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
         "key": "movieId"
       },
       "properties": {
+        "keys": [],
         "mandatory": [],
         "unique": [],
         "indexed": [],
@@ -204,6 +205,7 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
 * `**source**` (object) -- starting node for the relationship (identified by node label and key).
 * `**target**` (object) -- ending node for the relationship (identified by node label and key).
 * `properties` (object) -- mapping of source columns into relationship properties.
+** `keys` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship key constraint.
 ** `mandatory` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship property existence constraint.
 ** `unique` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship uniqueness constraint.
 ** `indexed` (list of objects) -- source columns that should be mapped into relationship properties _and_ get an index on the corresponding relationship property.
