@@ -39,7 +39,7 @@
             "\"Person\""
           ],
           "keys": [
-            {"person_tmdbId": "person_id"}
+            {"person_tmdbId": "id"}
           ],
           "properties": {
             "unique": [],
@@ -70,7 +70,7 @@
             "\"Movie\""
           ],
           "keys": [
-            {"movieId": "movie_id"}
+            {"movieId": "id"}
           ],
           "properties": {
             "unique": [],

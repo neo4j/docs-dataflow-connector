@@ -58,8 +58,10 @@ tag::targets[]
 The `targets` section contains the definitions of the graph entities that will result from the import.
 Neo4j represents objects with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-node[nodes] (ex. `movies`, `people`) and connects them with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship[relationships] (ex. `ACTED_IN`, `DIRECTED`).
 Each object in the targets section is keyed as either `node` or `edge` (synonym for _relationship_) and will generate a corresponding entity in Neo4j drawing data from a source.
+It is also possible to run custom Cypher queries via targets keyed as `custom_query`.
 
-By default, you do not have to think about dependencies between nodes and relationships, as the job imports all node objects _before_ importing any relationships (although you may alter this behavior).
+By default, you do not have to think about dependencies between nodes and relationships, as the job imports all `node` targets _before_ any `edge` target, and processes targets of type `custom_query` last.
+It is possible to alter this behavior and customize the ordering of targets.
 
 
 === Node objects
@@ -82,7 +84,7 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
       ],
       "properties": {
         "keys": [
-          {"person_tmdbId": "person_id"}
+          {"person_tmdbId": "id"}
         ],
         "mandatory": [],
         "unique": [],
@@ -103,7 +105,7 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
 ----
 
 - `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- a human-friendly name for the target  (unique among all targets).
+- `name` (string) -- a human-friendly name for the target (unique among all targets).
 - `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[Cypher -> `MERGE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[Cypher -> `CREATE`] for info.
 - `mappings` (object) -- details on how the source columns should be mapped into node details.
 * `**labels**` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[labels] to mark the nodes with. Note that they should be quoted and escaped.
@@ -127,13 +129,13 @@ The objects in `keys`, `mandatory`, `unique`, `indexed`, and all the type proper
 {"<column-name-in-source>": "<wished-node-property-name>"}
 ----
 
-For example, `{"person_tmbdId": "person_id"}` will map the source column `person_tmbdId` to the property `person_id` in the new nodes.
+For example, `{"person_tmbdId": "id"}` will map the source column `person_tmbdId` to the property `id` in the new nodes.
 
 Things to pay attention to:
 
 - **make sure to quote and escape labels**.
 - **names in `keys` should not also be listed in `unique` or `mandatory`**, or the constraints will conflict.
-- **source data must not have null values for `keys` columns**, or they will clash with the node key constraint. If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE movieId IS NOT NULL`).
+- **source data must not have null values for `keys` columns**, or they will clash with the node key constraint. If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
 - if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
 - when a property list has multiple items, specify each property in a separate object within the list, and not as a single object containing them all.
 +
@@ -193,7 +195,7 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
 ----
 
 - `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- a human-friendly name for the target  (unique among all targets).
+- `name` (string) -- a human-friendly name for the target (unique among all targets).
 - `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[Cypher -> `MERGE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[Cypher -> `CREATE`] for info.
 - `mappings` (object) -- details on how the source columns should be mapped into node details.
 * `**type**` (string) -- type to assign to the relationship. Note that it should be quoted and escaped.
@@ -223,10 +225,33 @@ For example, `{"role": "role"}` will map the source column `role` to the propert
 Things to pay attention to:
 
 - **make sure to quote and escape relationship types and node labels**.
-- **`source.key` and `target.key` must take names from the source columns, not from the mapped graph properties**.
+- **`source.key` and `target.key` take names from the source columns, not from the mapped graph properties**.
 In the snippet above, notice how the key names are `person_tmdbId` and `movieId` even if the mapped property names in the related node objects are `person_id` and `movie_id`.
 - if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
 - when a property list has multiple items, specify each property in a separate object within the list, and not as a single object containing them all.
+
+
+=== Custom queries
+
+Custom query targets are useful when the import requires a complex query that does not easily fit into the node/edge targets format.
+
+Compulsory attributes for `custom_query` objects are `source` and `query`.
+
+[source, json]
+----
+{
+  "custom_query": {
+    "name": "Person nodes",
+    "source": "persons",
+    "query": "UNWIND $rows AS row WHERE row.person_tmdbId IS NOT NULL MERGE (p:Person {id: row.person_tmdbId, name: row.name, born_in: row.bornIn, born: date(row.born), died: date(row.died)}) ON CREATE SET p.created_time=datetime()"
+  }
+}
+----
+
+- `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects. The rows extracted from the source are passed as a list query parameter to `query`.
+- `name` (string) -- a human-friendly name for the target (unique among all targets).
+- `**query**` (string) -- a Cypher query. Data from the source is available as a list in the parameter `$rows`.
+
 end::targets[]
 
 
