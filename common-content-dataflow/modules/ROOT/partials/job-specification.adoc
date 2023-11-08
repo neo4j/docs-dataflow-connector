@@ -337,7 +337,9 @@ end::actions[]
 tag::variables[]
 == Variables
 
-For production use cases it is common to supply date ranges or parameters based on dimensions, tenants, or tokens. Key-values can be supplied to replace `$` delimited tokens in SQL queries, URLs, or parameters. You can provide parameters in the `Options JSON` field when creating the Dataflow job, as a JSON object.
+For production use cases it is common to supply date ranges or parameters based on dimensions, tenants, or tokens.
+Key-values can be supplied to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers.
+You can provide parameters in the `Options JSON` field when creating the Dataflow job, as a JSON object.
 
-Variables must be escaped with the `$` symbol (ex. `$limit`). Replaceable tokens can appear in job specification files, in `readQuery` or `inputFilePattern` (source URI) command-line parameters, or in action options/headers.
+Variables must be escaped with the `$` symbol (ex. `$limit`). Replaceable tokens can appear in job specification files and in `readQuery` or `inputFilePattern` (source URI) command-line parameters.
 end::variables[]
