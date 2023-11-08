@@ -80,10 +80,11 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
       "labels": [
         "\"Person\""
       ],
-      "keys": [
-        {"person_tmdbId": "person_id"}
-      ],
       "properties": {
+        "keys": [
+          {"person_tmdbId": "person_id"}
+        ],
+        "mandatory": [],
         "unique": [],
         "indexed": [
           {"name": "name"}
@@ -106,16 +107,20 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
 - `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[Cypher -> `MERGE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[Cypher -> `CREATE`] for info.
 - `mappings` (object) -- details on how the source columns should be mapped into node details.
 * `**labels**` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[labels] to mark the nodes with. Note that they should be quoted and escaped.
-* `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node key constraint. These get mapped to string properties.
 * `properties` (object) -- mapping of source columns into node properties.
-** `unique` (list of objects) -- source columns that should be mapped into node properties _and_ that should get a node uniqueness constraint. These get mapped to string properties.
-** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ that  should get an index on the corresponding node property. These get mapped to string properties.
+** `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ get a node key constraint. These get mapped to string properties.
+** `mandatory` (list of objects) -- source columns that should be mapped into node properties _and_ get a node property existence constraint. These get mapped to string properties.
+** `unique` (list of objects) -- source columns that should be mapped into node properties _and_ get a unique node property constraint. These get mapped to string properties.
+** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ get an index on the corresponding node property. These get mapped to string properties.
 ** `strings`, `floats`, `ints`, `dates`, `points` (list of objects) -- source columns that should be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
 - `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `keys` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
 - `execute_after` (string) -- target object after which the current target should run. Either `node` or `edge`. To be used in conjunction with `execute_after_name`.
 - `execute_after_name` (string) -- the `name` of the target after which the current one should run.
 
-The objects in `keys`, `unique`, `indexed`, and all the type properties (`strings`, `floats`, etc) have the format
+[TIP]
+For more information on indexes and constraints in Neo4j, see link:https://neo4j.com/docs/cypher-manual/current/constraints/[Cypher -> Constraints] and link:https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/[Cypher -> Indexes for search performance].
+
+The objects in `keys`, `mandatory`, `unique`, `indexed`, and all the type properties (`strings`, `floats`, etc) have the format
 
 [source, json]
 ----
@@ -127,7 +132,7 @@ For example, `{"person_tmbdId": "person_id"}` will map the source column `person
 Things to pay attention to:
 
 - **make sure to quote and escape labels**.
-- **names in `keys` should not also be listed in `unique`**, or the constraints will conflict.
+- **names in `keys` should not also be listed in `unique` or `mandatory`**, or the constraints will conflict.
 - **source data must not have null values for `keys` columns**, or they will clash with the node key constraint. If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE movieId IS NOT NULL`).
 - if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
 - when a property list has multiple items, specify each property in a separate object within the list, and not as a single object containing them all.
@@ -172,6 +177,7 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
         "key": "movieId"
       },
       "properties": {
+        "mandatory": [],
         "unique": [],
         "indexed": [],
         "strings": [
@@ -194,12 +200,16 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
 * `**source**` (object) -- starting node for the relationship (identified by node label and key).
 * `**target**` (object) -- ending node for the relationship (identified by node label and key).
 * `properties` (object) -- mapping of source columns into relationship properties.
-** `unique` (list of objects) -- source columns that should be mapped into relationship properties _and_ that should get a relationship uniqueness constraint. These get mapped to string properties.
-** `indexed` (list of objects) -- source columns that should be mapped into relationship properties _and_ that should get an index on the corresponding relationship property. These get mapped to string properties.
+** `mandatory` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship property existence constraint. These get mapped to string properties.
+** `unique` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship uniqueness constraint. These get mapped to string properties.
+** `indexed` (list of objects) -- source columns that should be mapped into relationship properties _and_ get an index on the corresponding relationship property. These get mapped to string properties.
 ** `strings`, `floats`, `ints`, `dates`, `points` (list of objects) -- source columns that should be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
 - `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `mappings.source`, `mappings.target`, and properties. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
 - `execute_after` (string) -- target object after which the current target should run. Either `node` or `edge`. To be used in conjunction with `execute_after_name`.
 - `execute_after_name` (string) -- the `name` of the target after which the current one should run.
+
+[TIP]
+For more information on indexes and constraints in Neo4j, see link:https://neo4j.com/docs/cypher-manual/current/constraints/[Cypher -> Constraints] and link:https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/[Cypher -> Indexes for search performance].
 
 The objects in `unique`, `indexed`, and all the type properties (`strings`, `floats`, etc) have the format
 
