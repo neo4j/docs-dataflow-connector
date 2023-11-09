@@ -118,7 +118,7 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
 ** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ get an index on the corresponding node property.
 ** `strings`, `floats`, `ints`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
 - `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `keys` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
-- `execute_after` (string) -- target object after which the current target should run. Either `node` or `edge`. To be used in conjunction with `execute_after_name`.
+- `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
 - `execute_after_name` (string) -- the `name` of the target after which the current one should run.
 
 [TIP]
@@ -211,7 +211,7 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
 ** `indexed` (list of objects) -- source columns that should be mapped into relationship properties _and_ get an index on the corresponding relationship property.
 ** `strings`, `floats`, `ints`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
 - `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `mappings.source`, `mappings.target`, and properties. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
-- `execute_after` (string) -- target object after which the current target should run. Either `node` or `edge`. To be used in conjunction with `execute_after_name`.
+- `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
 - `execute_after_name` (string) -- the `name` of the target after which the current one should run.
 
 [TIP]
@@ -255,6 +255,13 @@ Compulsory attributes for `custom_query` objects are `source` and `query`.
 - `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects. The rows extracted from the source are passed as a list query parameter to `query`.
 - `name` (string) -- a human-friendly name for the target (unique among all targets).
 - `**query**` (string) -- a Cypher query. Data from the source is available as a list in the parameter `$rows`.
+- `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
+- `execute_after_name` (string) -- the name of the target after which the current one should run.
+
+[WARNING]
+Do not use custom queries to run Cypher that does not directly depend on a source; use xref:_prepost_load_actions[actions] instead.
+One-off queries, especially if not idempotent, are not fit to use in custom query targets.
+The reason for this is that queries from targets are run in batches, so a custom query may be run several times depending on the number of `$rows` batches extracted from the source.
 
 end::targets[]
 
@@ -319,11 +326,12 @@ The `actions` section contains commands that can be run before or after specific
 - `execute_after` (string) -- after what import step the action should run. Valid values are:
 * `preloads` -- before any source is parsed
 * `sources` -- after sources have been parsed
-* `nodes` -- after all node objects have been imported
-* `edges` -- after all edge objects have been imported
-* `loads` -- after all entities (nodes+edges) have been imported
-* `source`, `node`, `edge`, `action` -- after a specific source or node or edge or action object has been run, to be used in conjunction with `execute_after_name`
-- `execute_after_name` (string) -- after which `source`/`node`/`edge`/`action` object the step should run.
+* `nodes` -- after all `node` objects have been processed
+* `edges` -- after all `edge` objects have been processed
+* `custom_queries` -- after all `custom_query` objects have been processed
+* `loads` -- after all entities (nodes+edges) have been processed
+* `source`, `node`, `edge`, `custom_queries`, `action` -- after a specific source or node or edge or custom query or action object has been run, to be used in conjunction with `execute_after_name`
+- `execute_after_name` (string) -- after which `source`/`node`/`edge`/`custom_query`/`action` object the step should run.
 - `type` (string) -- what action to run. Valid values are:
 * `http_post` -- HTTP POST request (requires a `url` option)
 * `http_get` -- HTTP GET request  (requires a `url` option)
