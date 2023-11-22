@@ -16,7 +16,7 @@ This tutorial uses a subset of the `movies` dataset.
 It contains entities `Person` and `Movie`, linked together by `DIRECTED` and `ACTED_IN` relationships.
 In other words, each `Person` may have `DIRECTED` and/or `ACTED_IN` a `Movie`.
 Both entities and relationships have extra details attached to each of them.
-The data is sourced from the following files: xref:attachment$persons.csv[persons.csv], xref:attachment$movies.csv[movies.csv], xref:attachment$acted_in.csv[acted_in.csv], xref:attachment$directed.csv[directed.csv].
+The data is sourced from the following files: xref:common-content-dataflow:ROOT:attachment$persons.csv[persons.csv], xref:common-content-dataflow:ROOT:attachment$movies.csv[movies.csv], xref:common-content-dataflow:ROOT:attachment$acted_in.csv[acted_in.csv], xref:common-content-dataflow:ROOT:attachment$directed.csv[directed.csv].
 
 [.shadow]
 image::{common}:image$movies-model.png[width=400]
