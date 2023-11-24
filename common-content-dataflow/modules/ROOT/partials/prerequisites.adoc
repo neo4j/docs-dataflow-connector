@@ -11,20 +11,93 @@ If you don't have an instance yet, you have two options:
 - sign-up for a free link:https://neo4j.com/cloud/aura-free/[AuraDB] instance
 - install and self-host Neo4j in a location that is publicly accessible (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
 
-Either way, you then need to create a file containing your database connection information in JSON format (basic authentication is the only supported method).
+Either way, you then need to create a file containing your database connection information in JSON format.
+We will refer to this file as `neo4j-connection-info.json`.
+The file can be uploaded either as a secret to Google Cloud Secret Manager or directly into a Google Cloud Storage bucket.
 
-.neo4j-connection-info.json
-[source, JSON]
+[.tabbed-example]
+====
+[.include-with-basic-auth]
+=====
+The basic authentication scheme relies on traditional username and password.
+This scheme can also be used to authenticate against an LDAP server.
+
+[source,json]
 ----
 {
   "server_url": "neo4j+s://xxxx.databases.neo4j.io",
   "database": "neo4j",
-  "username": "neo4j",
-  "pwd": "verysecret"
+  "username": "<username>",
+  "pwd": "<password>"
 }
 ----
+=====
 
-The file can be uploaded either as a secret to Google Cloud Secret Manager or directly into a Google Cloud Storage bucket.
+[.include-with-no-auth]
+=====
+If authentication is disabled on the server, credentials can be omitted.
+
+[source,json]
+----
+{
+  "server_url": "neo4j+s://xxxx.databases.neo4j.io",
+  "database": "neo4j",
+  "auth_type": "none"
+}
+----
+=====
+
+[.include-with-kerberos-auth]
+=====
+The Kerberos authentication scheme requires a base64-encoded ticket.
+It can only be used if the server has the link:{neo4j-docs-base-uri}/kerberos-add-on/current/deployment/[Kerberos Add-on installed].
+
+[source,json]
+----
+{
+  "server_url": "neo4j+s://xxxx.databases.neo4j.io",
+  "database": "neo4j",
+  "auth_type": "kerberos",
+  "ticket": "<base 64 encoded Kerberos ticket>"
+}
+----
+=====
+
+[.include-with-bearer-auth]
+=====
+The bearer authentication scheme requires a base64-encoded token provided by an Identity Provider through Neo4j's link:{neo4j-docs-base-uri}/operations-manual/current/authentication-authorization/sso-integration[Single Sign-On feature].
+
+[source,json]
+----
+{
+  "server_url": "neo4j+s://xxxx.databases.neo4j.io",
+  "database": "neo4j",
+  "auth_type": "bearer",
+  "token": "<bearer token>"
+}
+----
+=====
+
+[.include-with-custom-auth]
+=====
+To log into a server having a custom authentication scheme.
+
+[source,json]
+----
+{
+  "server_url": "neo4j+s://xxxx.databases.neo4j.io",
+  "database": "neo4j",
+  "auth_type": "custom",
+  "principal": "<principal>",
+  "credentials": "<credentials>",
+  "realm": "<realm>",
+  "scheme": "<scheme>",
+  "parameters": {"<key>": "<value>"}
+}
+----
+=====
+====
+
 // end::neo4j[]
 
 
