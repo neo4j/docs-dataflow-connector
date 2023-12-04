@@ -50,10 +50,10 @@
           "labels": [
             "\"Person\""
           ],
-          "keys": [
-            {"person_tmdbId": "id"}
-          ],
           "properties": {
+            "keys": [
+              {"person_tmdbId": "id"}
+            ],
             "unique": [],
             "indexed": [
               {"name": "name"}
@@ -81,10 +81,10 @@
           "labels": [
             "\"Movie\""
           ],
-          "keys": [
-            {"movieId": "id"}
-          ],
           "properties": {
+            "keys": [
+              {"movieId": "id"}
+            ],
             "unique": [],
             "indexed": [
               {"title": "title"}
