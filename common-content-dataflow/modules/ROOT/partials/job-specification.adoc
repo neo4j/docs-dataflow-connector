@@ -92,8 +92,8 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
           {"name": "name"}
         ],
         "strings": [
-          {"person_tmdbId": "id"}
-          {"name": "name"}
+          {"person_tmdbId": "id"},
+          {"name": "name"},
           {"bornIn": "born_in"}
         ],
         "dates": [
