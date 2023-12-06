@@ -4,6 +4,8 @@
 
 include::{common}:partial$prerequisites.adoc[tags=neo4j]
 
+include::{common}:partial$prerequisites.adoc[tags=secret]
+
 include::{common}:partial$prerequisites.adoc[tags=google-cloud-storage]
 
 

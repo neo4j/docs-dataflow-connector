@@ -12,7 +12,6 @@ If you don't have an instance yet, you have two options:
 - install and self-host Neo4j in a location that is publicly accessible (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
 
 Either way, you then need to create a file containing your database connection information in JSON format (basic authentication is the only supported method).
-This file will go into your Cloud Storage bucket.
 
 .neo4j-connection-info.json
 [source, JSON]
@@ -24,8 +23,18 @@ This file will go into your Cloud Storage bucket.
   "pwd": "verysecret"
 }
 ----
+
+The file can either be uploaded as a secret with Google Cloud Secret Manager or uploaded directly to Google Cloud Storage.
 // end::neo4j[]
 
+
+// tag::secret[]
+== Secret Manager
+
+You need access to link:https://console.cloud.google.com/security/secret-manager[Google Secret Manager].
+
+Go ahead and create the secret with a unique name and upload `neo4j-connection-info.json` for the secret's value.
+// end::secret[]
 
 // tag::google-cloud-storage[]
 == Google Cloud Storage bucket

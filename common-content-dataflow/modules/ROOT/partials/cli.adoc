@@ -12,6 +12,20 @@ gcloud dataflow flex-template run "test-bq-cli-`date +%Y%m%d-%H%M%S`" \
   --parameters neo4jConnectionUri="<URI-to-neo4j-connection-JSON-file>"
 ----
 
+When using Google Secret Manager, the invocation becomes:
+
+[source, bash]
+----
+export REGION=us-central1
+gcloud dataflow flex-template run "test-bq-cli-`date +%Y%m%d-%H%M%S`" \
+  --template-file-gcs-location="gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j" \
+  --region "$REGION" \
+  --parameters jobSpecUri="<URI-to-job-specification-JSON-file>" \
+  --parameters neo4jConnectionSecretId="<secret-id>"
+----
+
+where `<secret-id>` has the following structure: `projects/<project>/secrets/<secret-name>/versions/<secret-version>`.
+
 The REST version looks like this:
 
 [source, bash]
@@ -26,6 +40,26 @@ curl -X POST "https://Dataflow.googleapis.com/v1b3/projects/<project-name>/locat
       "parameters": {
         "jobSpecUri": "<URI-to-job-specification-JSON-file>",
         "neo4jConnectionUri": "<URI-to-neo4j-connection-JSON-file>"
+      },
+   "containerSpecGcsPath": "gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j"
+   }
+}'
+----
+
+When using Google Secret Manager, the REST invocation becomes:
+
+[source, bash]
+----
+export REGION=us-central1
+curl -X POST "https://Dataflow.googleapis.com/v1b3/projects/<project-name>/locations/$REGION/flexTemplates:launch" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $(gcloud auth print-access-token)" \
+-d '{
+   "launch_parameter": {
+      "jobName": "test-bq-rest-'$(date +%Y%m%d-%H%M%S)'",
+      "parameters": {
+        "jobSpecUri": "<URI-to-job-specification-JSON-file>",
+        "neo4jConnectionSecretId": "<secret-id>"
       },
    "containerSpecGcsPath": "gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j"
    }
