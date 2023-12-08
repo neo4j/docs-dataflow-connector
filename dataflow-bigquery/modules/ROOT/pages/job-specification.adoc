@@ -37,6 +37,9 @@ To import a BigQuery dataset, three attributes are compulsory.
   1. the source BigQuery table can have more columns than what you select in the query;
   2. multiple targets can use the same source, even filtering it for a subset of columns.
 
+[WARNING]
+    Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
+
 
 include::{common}:partial$job-specification.adoc[tags=targets]
 
