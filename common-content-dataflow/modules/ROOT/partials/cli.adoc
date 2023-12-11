@@ -1,6 +1,6 @@
 = CLI invocations
 
-You can script execution of Dataflow jobs using the link:https://cloud.google.com/dataflow/docs/guides/templates/using-flex-templates[Google Cloud CLI]. Executing a job through the CLI is functionally equivalent to using the Dataflow user interface. Accepting the defaults yields a very minimalistic script:
+You can script execution of Dataflow jobs using the link:https://cloud.google.com/dataflow/docs/guides/templates/using-flex-templates[Google Cloud CLI]. Executing a job through the CLI is functionally equivalent to using the Dataflow user interface.
 
 [source, bash]
 ----
@@ -12,7 +12,7 @@ gcloud dataflow flex-template run "test-bq-cli-`date +%Y%m%d-%H%M%S`" \
   --parameters neo4jConnectionUri="<URI-to-neo4j-connection-JSON-file>"
 ----
 
-When using Google Secret Manager, the invocation becomes:
+If the credentials file is stored in Google Secret Manager, the parameter `neo4jConnectionUri` is replaced by `neo4jConnectionSecretId` and the invocation becomes:
 
 [source, bash]
 ----
@@ -46,7 +46,7 @@ curl -X POST "https://Dataflow.googleapis.com/v1b3/projects/<project-name>/locat
 }'
 ----
 
-When using Google Secret Manager, the REST invocation becomes:
+If the credentials file is stored in Google Secret Manager, the parameter `neo4jConnectionUri` is replaced by `neo4jConnectionSecretId` and the invocation becomes:
 
 [source, bash]
 ----

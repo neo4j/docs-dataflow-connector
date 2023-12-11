@@ -24,16 +24,16 @@ Either way, you then need to create a file containing your database connection i
 }
 ----
 
-The file can either be uploaded as a secret with Google Cloud Secret Manager or uploaded directly to Google Cloud Storage.
+The file can be uploaded either as a secret to Google Cloud Secret Manager or directly into a Google Cloud Storage bucket.
 // end::neo4j[]
 
 
 // tag::secret[]
-== Secret Manager
+== Google Secret Manager
 
-You need access to link:https://console.cloud.google.com/security/secret-manager[Google Secret Manager].
+If you wish to store the credentials file as a Google secret, you need access to link:https://console.cloud.google.com/security/secret-manager[Google Secret Manager].
 
-Go ahead and create the secret with a unique name and upload `neo4j-connection-info.json` for the secret's value.
+Go ahead and create a new secret and upload the `neo4j-connection-info.json` file as value.
 // end::secret[]
 
 // tag::google-cloud-storage[]
@@ -42,7 +42,7 @@ Go ahead and create the secret with a unique name and upload `neo4j-connection-i
 You need a link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket.
 This is the one and only location from where the Dataflow job can source files (both configuration files and source CSVs, if any).
 
-Go ahead and upload `neo4j-connection-info.json` to your Cloud Storage bucket.
+Unless you stored the credentials file in Google Secret Manager, go ahead and upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
 // end::google-cloud-storage[]
 
 
