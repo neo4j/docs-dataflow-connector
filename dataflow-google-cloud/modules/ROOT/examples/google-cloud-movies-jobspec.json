@@ -109,11 +109,11 @@
           "type": "\"DIRECTED\"",
           "source": {
             "label": "\"Person\"",
-            "key": "person_tmdbId"
+            "key": {"person_tmdbId": "id"}
           },
           "target": {
             "label": "\"Movie\"",
-            "key": "movieId"
+            "key": {"movieId": "id"}
           },
           "properties": {}
         }
@@ -131,11 +131,11 @@
           "type": "\"ACTED_IN\"",
           "source": {
             "label": "\"Person\"",
-            "key": "person_tmdbId"
+            "key": {"person_tmdbId": "id"}
           },
           "target": {
             "label": "\"Movie\"",
-            "key": "movieId"
+            "key": {"movieId": "id"}
           },
           "properties": {
             "strings": [

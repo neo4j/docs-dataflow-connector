@@ -116,7 +116,7 @@ Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `m
 ** `mandatory` (list of objects) -- source columns that should be mapped into node properties _and_ get a node property existence constraint.
 ** `unique` (list of objects) -- source columns that should be mapped into node properties _and_ get a unique node property constraint.
 ** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ get an index on the corresponding node property.
-** `strings`, `floats`, `ints`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
+** `strings`, `floats`, `doubles`, `integers`, `longs`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
 - `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `keys` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
 - `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
 - `execute_after_name` (string) -- the `name` of the target after which the current one should run.
@@ -209,7 +209,7 @@ Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mapping
 ** `mandatory` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship property existence constraint.
 ** `unique` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship uniqueness constraint.
 ** `indexed` (list of objects) -- source columns that should be mapped into relationship properties _and_ get an index on the corresponding relationship property.
-** `strings`, `floats`, `ints`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
+** `strings`, `floats`, `doubles`, `integers`, `longs`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
 - `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `mappings.source`, `mappings.target`, and properties. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
 - `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
 - `execute_after_name` (string) -- the `name` of the target after which the current one should run.
