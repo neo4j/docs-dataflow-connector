@@ -12,7 +12,6 @@ If you don't have an instance yet, you have two options:
 - install and self-host Neo4j in a location that is publicly accessible (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
 
 Either way, you then need to create a file containing your database connection information in JSON format (basic authentication is the only supported method).
-This file will go into your Cloud Storage bucket.
 
 .neo4j-connection-info.json
 [source, JSON]
@@ -24,8 +23,18 @@ This file will go into your Cloud Storage bucket.
   "pwd": "verysecret"
 }
 ----
+
+The file can be uploaded either as a secret to Google Cloud Secret Manager or directly into a Google Cloud Storage bucket.
 // end::neo4j[]
 
+
+// tag::secret[]
+== Google Secret Manager
+
+If you wish to store the credentials file as a Google secret, you need access to link:https://console.cloud.google.com/security/secret-manager[Google Secret Manager].
+
+Go ahead and create a new secret and upload the `neo4j-connection-info.json` file as value.
+// end::secret[]
 
 // tag::google-cloud-storage[]
 == Google Cloud Storage bucket
@@ -33,7 +42,7 @@ This file will go into your Cloud Storage bucket.
 You need a link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket.
 This is the one and only location from where the Dataflow job can source files (both configuration files and source CSVs, if any).
 
-Go ahead and upload `neo4j-connection-info.json` to your Cloud Storage bucket.
+Unless you stored the credentials file in Google Secret Manager, go ahead and upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
 // end::google-cloud-storage[]
 
 
