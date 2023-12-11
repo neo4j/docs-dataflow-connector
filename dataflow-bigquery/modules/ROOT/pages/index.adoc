@@ -8,6 +8,9 @@ You can use the template for both first-time and incremental imports.
 
 This guide walks you through how to import an example BigQuery dataset into a Neo4j database using a Dataflow job. It also provides a public dataset you can experiment with, before you go on and create an import job for you own dataset.
 
+[NOTE]
+To import data from CSV files, checkout the link:https://neo4j.com/docs/dataflow-google-cloud/[Dataflow Flex Template for Google Cloud to Neo4j].
+
 
 [discrete]
 == Things you will need
