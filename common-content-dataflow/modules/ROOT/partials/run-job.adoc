@@ -8,7 +8,13 @@ To create a job, specify the following fields:
 - **Regional endpoint** -- must match the region of your Google Cloud Storage bucket
 - **Dataflow template** -- select `Google Cloud to Neo4j`
 - **Path to job configuration file** -- the JSON job specification file (from a Google Cloud Storage bucket)
-- **Path to Neo4j connection metadata** -- the JSON connection information file (from a Google Cloud Storage bucket)
+
+The connection metadata is specified either as a secret or a plain-text JSON resource.
+Exactly one of these options must be specified.
+
+- **Optional Parameters > Path to Neo4j connection metadata** -- the JSON connection information file (from a Google Cloud Storage bucket)
+- **Optional Parameters > Neo4j secret ID** -- the secret ID for the JSON connection information (from Google Secret Manager)
+
 - **Optional Parameters > Options JSON** -- values for xref:job-specification.adoc#_variables[variables] used in the job specification file
 
 [.shadow]
