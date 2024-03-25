@@ -11,13 +11,15 @@ include::{common}:partial$job-specification.adoc[tags=intro]
 include::example$bigquery-movies-jobspec.json[]
 ----
 
+====
+
 
 include::{common}:partial$job-specification.adoc[tags=configuration]
 
 
 == Sources
 
-The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
+The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will take the data surfaced by the sources and make it available to the targets, which will eventually map it into Neo4j.
 
 To import a BigQuery dataset, three attributes are compulsory.
 
@@ -31,14 +33,14 @@ To import a BigQuery dataset, three attributes are compulsory.
 ----
 
 - `type` (string) -- `bigquery`.
-- `name` (string) -- a human-friendly label for the source (unique among all sources). You will use this to reference the source in the targets section.
+- `name` (string) -- a human-friendly label for the source (unique among all names; may not contain spaces). You will use this to reference the source from other parts of the specification file.
 - `query` (string) -- the dataset to extract from BigQuery, as an SQL query. Notice that:
 
-  1. the source BigQuery table can have more columns than what you select in the query;
-  2. multiple targets can use the same source, even filtering it for a subset of columns.
+  1. the source table can have more columns than what you select in the query;
+  2. multiple targets can use the same source, potentially filtering it for a different subset of columns.
 
 [WARNING]
-    Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
+Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
 
 
 include::{common}:partial$job-specification.adoc[tags=targets]

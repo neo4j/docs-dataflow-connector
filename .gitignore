@@ -32,6 +32,8 @@ shared/
 src/main/_common-and-old/
 tags
 target/
+.vscode
+package-lock.json
 
 # node modules
 node_modules/
