@@ -659,6 +659,7 @@ Further attributes depend on the action type.
 ====
 
 
+[discrete]
 === Actions full examples
 
 
