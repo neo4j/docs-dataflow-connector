@@ -6,6 +6,8 @@ include::{common}:partial$prerequisites.adoc[tags=intro]
 
 include::{common}:partial$prerequisites.adoc[tags=neo4j]
 
+include::{common}:partial$prerequisites.adoc[tags=gcs-bucket]
+
 include::{common}:partial$prerequisites.adoc[tags=connection-info]
 
 

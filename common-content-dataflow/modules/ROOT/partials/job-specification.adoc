@@ -560,8 +560,8 @@ Each target can optionally have a `source_transformation` attribute containing a
 - `where` (string) -- Filters out source data prior to import (with an SQL `WHERE` clause format).
 - `order_by` (list of objects) -- Enforces ordering on the source. What shape should expression have?
 
-[.discrete]
-=== A transformation full example
+[discrete]
+=== Transformation full example
 
 end::transformations[]
 
@@ -669,6 +669,7 @@ end::actions[]
 
 tag::variables[]
 
+[#variables]
 == Variables
 
 Key-values can be supplied in Dataflow to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers (?).
