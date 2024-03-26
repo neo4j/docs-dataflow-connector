@@ -1,14 +1,15 @@
 = Create a job specification file
 
-// tag::intro[]
+tag::intro[]
+
 The job configuration file instructs Dataflow on how to run the import (where to source the data from, how to map it into Neo4j, etc).
 
 It consists of a JSON object with four sections:
 
-- `config` -- Global flags affecting how the import is performed
+- `config` -- Global flags affecting how the import is performed (optional)
 - `sources` -- Data source definitions (relational)
 - `targets` -- Data target definitions (graph: nodes/relationships)
-- `actions` -- Pre/Post-load actions
+- `actions` -- Pre/Post-load actions (optional)
 
 .Job specification JSON skeleton
 [source, JSON]
@@ -28,10 +29,13 @@ It consists of a JSON object with four sections:
 ----
 
 At a high level, the job fetches data from `sources` and transforms/imports them into the `targets`.
-// end::intro[]
+
+end::intro[]
 
 
 tag::configuration[]
+
+[#configuration]
 == Configuration
 
 The `config` object contains global configuration for the import job.
@@ -53,6 +57,8 @@ end::configuration[]
 
 
 tag::targets[]
+
+[#targets]
 == Targets
 
 The `targets` section contains the definitions of the graph entities that will result from the import.
@@ -75,6 +81,7 @@ By default, **you do not have to think about dependencies between nodes and rela
 It is however possible to alter the default behavior and customize the ordering of targets.
 
 
+[#node-objects]
 === Node objects
 
 Node entities must be grouped in a list keyed `nodes` inside the `targets` object.
@@ -244,6 +251,7 @@ If set to `true`, all properties will get range indexes created already! (or?)
 '''
 
 
+[#relationship-objects]
 === Relationship objects
 
 Relationship entities must be grouped in a list keyed `relationships` inside the `targets` object.
@@ -281,8 +289,8 @@ It must also contain information on what types of nodes the relationship links t
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
 - `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
 - `type` (string) -- link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship-type[Type] to assign to the relationship.
-- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship. `start_node` can play the same role, except it takes a xref:_node_objects[full node object].
-- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship. `end_node` can play the same role, except it takes a xref:_node_objects[full node object].
+- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship. `start_node` can play the same role, except it takes a xref:node-objects[full node object].
+- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship. `end_node` can play the same role, except it takes a xref:node-objects[full node object].
 
 
 ==== Relationship properties
@@ -435,6 +443,7 @@ If set to `true`, all properties will get range indexes created already! (or?)
 '''
 
 
+[#query-objects]
 === Custom queries
 
 Custom query targets are useful when the import requires a complex query that does not easily fit into the node/relationship targets format.
@@ -513,6 +522,8 @@ end::targets[]
 
 
 tag::transformations[]
+
+[#source-transformations]
 == Source transformations
 
 Each target can optionally have a `transform` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for import into Neo4j.
@@ -555,58 +566,118 @@ The following example shows how the aggregations would work on a fictitious data
 - `aggregations` (list of objects) -- aggregation functions are specified as SQL queries in the `expr` attribute, and the result is available under the name specified in `field`.
 - `limit` (int) -- caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
 - `where` (string) -- filters out source data prior to import (with an SQL `WHERE` clause format).
+
 end::transformations[]
 
 
 tag::actions[]
+
+[#actions]
 == Pre/Post load actions
 
-The `actions` section contains commands that can be run before or after specific steps of the import process. You may for example submit HTTP requests when steps complete, or execute SQL queries on the source, or Cypher statements on the Neo4j target.
+The `actions` section contains commands that can be run before or after specific steps of the import process.
+You may for example submit HTTP requests when steps complete, execute SQL queries on the source, or run Cypher statements on the Neo4j target instance.
+
+.Actions specification skeleton
+[source, JSON]
+----
+  ...
+  "actions": [
+    { <actionSpec1> },
+    { <actionSpec2> },
+    ...
+  ]
+----
+
+Each action object must at minimum have the attribute `name`, `type`, and `stage`.
+Further attributes depend on the action type.
+
+[.tabbed-example]
+====
+[.include-with-HTTP-action]
+=====
 
 [source, json]
 ----
 {
-  "name": "Post load POST request",
-  "execute_after": "edge",
-  "execute_after_name": "Acted_in",
-  "type": "http_post",
-  "options": [
-    {"url": "https://httpbin.org/post"},
-    {"param1": "value1"}
-  ],
-  "headers": [
-    {"header1": "value1"},
-    {"header2": "value2"}
-  ]
+  "type": "http",
+  "name": "<actionName>",
+  "stage": "<stageName>",
+  "method": "<get/post>",
+  "url": "<targetUrl>",
+  "headers": {}
 }
 ----
 
-- `name` (string) -- a human friendly name for the action.
-- `execute_after` (string) -- after what import step the action should run. Valid values are:
-* `preloads` -- before any source is parsed
-* `sources` -- after sources have been parsed
-* `nodes` -- after all `node` objects have been processed
-* `edges` -- after all `edge` objects have been processed
-* `custom_queries` -- after all `custom_query` objects have been processed
-* `loads` -- after all entities (nodes+edges) have been processed
-* `source`, `node`, `edge`, `custom_queries`, `action` -- after a specific source or node or edge or custom query or action object has been run, to be used in conjunction with `execute_after_name`
-- `execute_after_name` (string) -- after which `source`/`node`/`edge`/`custom_query`/`action` object the step should run.
-- `type` (string) -- what action to run. Valid values are:
-* `http_post` -- HTTP POST request (requires a `url` option)
-* `http_get` -- HTTP GET request  (requires a `url` option)
-* `bigquery` -- query to a BigQuery database (requires an `sql` option)
-* `cypher` -- query to the target Neo4j database (requires a `cypher` option)
-- `options` (list of objects) -- action options, such as `url`, `sql`, `cypher`.
-- `headers` (list of objects) -- headers to send with the request.
+- `type` (string) -- The action type.
+- `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
+- `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
+- `method` (string) -- The HTTP method; either `get` or `post`.
+- `url` (string) -- The URL the HTTP request should target.
+- `headers` (object, optional) -- Request headers.
+
+=====
+
+[.include-with-Cypher-action]
+=====
+
+[source, json]
+----
+{
+  "type": "cypher",
+  "name": "<actionName>",
+  "stage": "<stageName>",
+  "query": "<cypherQuery>",
+  "execution_mode": "<transaction/autocommit>"
+}
+----
+
+- `type` (string) -- The action type.
+- `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
+- `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
+- `query` (string) -- The Cypher query to run.
+- `execution_mode` (string, optional) -- Under what mode the query should be executed.
+
+=====
+
+[.include-with-BigQuery-action]
+=====
+
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "<actionName>",
+  "stage": "<stageName>",
+  "sql": "<sqlQuery>"
+}
+----
+
+- `type` (string) -- The action type.
+- `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
+- `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
+- `sql` (string) -- The SQL query to run.
+
+=====
+
+====
+
+
+=== Actions full examples
+
+
+
+
 end::actions[]
 
 
 tag::variables[]
+
 == Variables
 
-For production use cases it is common to supply date ranges or parameters based on dimensions, tenants, or tokens.
-Key-values can be supplied to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers.
+Key-values can be supplied in Dataflow to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers (?).
 You can provide parameters in the `Options JSON` field when creating the Dataflow job, as a JSON object.
 
-Variables must be escaped with the `$` symbol (ex. `$limit`). Replaceable tokens can appear in job specification files and in `readQuery` or `inputFilePattern` (source URI) command-line parameters.
+Variables must be prefixed by the `$` symbol (ex. `$limit`), and may be used in job specification files and in `readQuery` or `inputFilePattern` (source URI) xref:cli.adoc[command-line] parameters.
+
 end::variables[]

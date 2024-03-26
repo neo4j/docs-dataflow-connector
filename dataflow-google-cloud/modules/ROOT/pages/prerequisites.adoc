@@ -6,8 +6,12 @@ include::{common}:partial$prerequisites.adoc[tags=neo4j]
 
 include::{common}:partial$prerequisites.adoc[tags=secret]
 
-include::{common}:partial$prerequisites.adoc[tags=google-cloud-storage]
+=== Google Cloud Storage bucket
 
+You need a link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket.
+This is the one and only location from where the Dataflow job can source files (both configuration files and source CSVs, if any).
+
+Unless you stored the credentials file in Google Secret Manager, go ahead and upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
 
 == Dataset to import
 

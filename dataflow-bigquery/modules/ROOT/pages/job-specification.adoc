@@ -24,6 +24,7 @@ include::example$bigquery-movies-jobspec.json[]
 include::{common}:partial$job-specification.adoc[tags=configuration]
 
 
+[#sources]
 == Sources
 
 The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will take the data surfaced by the sources and make it available to the targets, which will eventually map it into Neo4j.
