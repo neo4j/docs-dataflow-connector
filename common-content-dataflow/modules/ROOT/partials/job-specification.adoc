@@ -280,7 +280,7 @@ It must also contain information on what types of nodes the relationship links t
 {
   "source": "<sourceName>",
   "name": "<targetName>",
-  "type": "relationshipType",
+  "type": "<relationshipType>",
   "start_node_reference": "<nodeTargetName>",  // or "start_node": { nodeObj }],
   "end_node_reference": "<nodeTargetName>"  // or "end_node": { nodeObj }]
 }

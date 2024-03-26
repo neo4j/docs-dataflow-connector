@@ -5,7 +5,7 @@ Once the job specification is ready, upload its JSON file to your Cloud Storage 
 To create a job, specify the following fields:
 
 - **Job name** -- A human-friendly name for the job.
-- **Regional endpoint** -- Must match the region of the Google Cloud Storage bucket containing configuration and source files. If running the xref:job-specification.adoc#full-example[full example provided in docs], set the region to `us`.
+- **Regional endpoint** -- Must match the region of the Google Cloud Storage bucket containing configuration and source files. If running the xref:job-specification.adoc#full-example[full example provided in docs], set the region to one of the `us` ones.
 - **Dataflow template** -- Select `Google Cloud to Neo4j`.
 - **Path to job configuration file** -- The JSON job specification file (from a Google Cloud Storage bucket).
 - **Optional Parameters > Options JSON** -- Values for xref:job-specification.adoc#variables[variables] used in the job specification file.
