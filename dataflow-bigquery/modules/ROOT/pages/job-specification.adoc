@@ -6,11 +6,18 @@
 include::{common}:partial$job-specification.adoc[tags=intro]
 
 
+[#full-example]
+.A full job specification example
+====
+Here below is an example job specification file that works out of the box to import the publicly-available `movies` dataset.
+
+The next sections break it down and provide in-context information for each part.
+We recommend reading this guide side by side with the job specification example.
+
 [source, json]
 ----
 include::example$bigquery-movies-jobspec.json[]
 ----
-
 ====
 
 
@@ -27,8 +34,8 @@ To import a BigQuery dataset, three attributes are compulsory.
 ----
 {
   "type": "bigquery",
-  "name": "movies",
-  "query": "SELECT movieId, title FROM team-connectors-dev.movies.movies"
+  "name": "<sourceName>",
+  "query": "<bigquerySqlQuery>"
 }
 ----
 
