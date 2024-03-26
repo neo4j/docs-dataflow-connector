@@ -124,8 +124,8 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
 - `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
 - `labels` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[Labels] to mark the nodes with.
 - `properties` (list of objects) -- Mapping between source columns and node properties. +
-Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64_encoding), `date`, `duration`, `float`, `integer`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`. +
-Each property type (except `byte_array`) is also available in its `_array` form (i.e. `date_array`, `string_array`, etc) for BigQuery `repeated` column types.
+Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
+{target_property_type-valid-values-extra}
 
 
 ==== Node schema definition
@@ -216,7 +216,7 @@ Where the attributes for each object are:
 [WARNING]
 **Source data must not have null values for `key_constraints` columns**, or they will clash with the node key constraint.
 If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
-Alternatively, use the `where` attribute in a xref:_source_transformations[source transformation].
+Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
 [TIP]
 Be mindful of the global config `index_all_properties`.
@@ -241,7 +241,7 @@ If set to `true`, all properties will get range indexes created already! (or?)
 
 - `active` (bool) -- Whether the target should be included in the import.
 - `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
-- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:_source_transformations[].
+- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
 
@@ -314,8 +314,8 @@ Relationships may also map source columns as properties.
 ----
 
 - `properties` (list of objects) -- Mapping between source columns and relationship properties. +
-Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64_encoding), `date`, `duration`, `float`, `integer`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`. +
-Each property type (except `byte_array`) is also available in its `_array` form (i.e. `date_array`, `string_array`, etc) for BigQuery `repeated` column types.
+Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
+{target_property_type-valid-values-extra}
 
 
 ==== Relationship schema definition
@@ -406,7 +406,7 @@ Where the attributes for each object are:
 [WARNING]
 **Source data must not have null values for `key_constraints` columns**, or they will clash with the relationship key constraint.
 If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
-Alternatively, use the `where` attribute in a xref:_source_transformations[source transformation].
+Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
 [TIP]
 Be mindful of the global config `index_all_properties`.
@@ -433,7 +433,7 @@ If set to `true`, all properties will get range indexes created already! (or?)
 - `active` (bool) -- Whether the target should be included in the import.
 - `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `create`, `match`, or `merge` (default), respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`], link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`], and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
 - `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
-- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:_source_transformations[].
+- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
 
@@ -521,51 +521,47 @@ The reason for this is that queries from targets are run in batches, so a custom
 end::targets[]
 
 
+tag::target_property_type-valid-values[]
+
+
+
 tag::transformations[]
 
 [#source-transformations]
 == Source transformations
 
-Each target can optionally have a `transform` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for import into Neo4j.
+Each target can optionally have a `source_transformation` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for import into Neo4j.
 
-The following example shows how the aggregations would work on a fictitious dataset (not the movies one).
-
-[source, json]
+[source, json, role=nocollapse]
 ----
 "source_transformations": {
-      "enable_grouping": true,
-      "aggregations": [],
-      "limit": -1,
-      "where": "",
-      "order_by": [
-        {
-          "expression": "",
-          "order": "" // ASC/DESC
-        }
-      ],
-    },
-
-"transform": {
-  "group": true,
-  "aggregations": [
-    {
-      "expr": "SUM(unit_price*quantity)",
-      "field": "total_amount_sold"
-    },
-    {
-      "expr": "SUM(quantity)",
-      "field": "total_quantity_sold"
-    }
+  "enable_grouping": true,
+  "aggregations": [ {
+    "expression": "",
+    "field_name": ""
+   },
+   { aggregationObj2 }, ...
   ],
-  "limit": 50,
-  "where": "person_tmbdId IS NOT NULL"
+  "limit": -1,
+  "where": "",
+  "order_by": [
+    {
+      "expression": "",
+      "order": "<asc/desc>"
+    },
+    { orderObj2 }, ...
+  ],
 }
 ----
 
-- `group` (bool) -- must be `true` for `aggregations`/`where` to work.
-- `aggregations` (list of objects) -- aggregation functions are specified as SQL queries in the `expr` attribute, and the result is available under the name specified in `field`.
-- `limit` (int) -- caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
-- `where` (string) -- filters out source data prior to import (with an SQL `WHERE` clause format).
+- `enable_grouping` (bool) -- Must be `true` for `aggregations`/`where` to work. ?
+- `aggregations` (list of objects) -- Aggregations are specified as SQL queries in the `expression` attribute, and the result is available as a source column under the name specified in `field_name`.
+- `limit` (int) -- Caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
+- `where` (string) -- Filters out source data prior to import (with an SQL `WHERE` clause format).
+- `order_by` (list of objects) -- Enforces ordering on the source. What shape should expression have?
+
+[.discrete]
+=== A transformation full example
 
 end::transformations[]
 

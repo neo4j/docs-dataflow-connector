@@ -1,4 +1,5 @@
 :page-role: beta
+:target_property_type-valid-values-extra:
 
 = Create a job specification file
 
