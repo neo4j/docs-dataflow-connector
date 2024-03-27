@@ -1,4 +1,3 @@
-:page-role: beta
 :target_property_type-valid-values-extra: Each property type (except byte_array) is also available in its "_array" form (i.e. date_array, string_array, etc) for BigQuery "repeated" column types.
 
 = Create a job specification file
