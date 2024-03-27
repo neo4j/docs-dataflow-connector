@@ -98,6 +98,12 @@ To log into a server having a custom authentication scheme.
 =====
 ====
 
+[IMPORTANT]
+====
+Dataflow Flex Templates for BigQuery and Google Cloud to Neo4j are designed to make use of link:https://neo4j.com/docs/cypher-manual/current/constraints/[Constraints] which is only available in Aura or Neo4j Enterprise Edition installations.
+Although the jobs will be able to run against Neo4j Community Edition installations, please bear in mind that constraints will not be available and extra care needs to be taken to ensure that the source data and job specification is prepared accordingly.
+====
+
 // end::neo4j[]
 
 

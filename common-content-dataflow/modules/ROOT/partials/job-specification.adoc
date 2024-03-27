@@ -158,6 +158,10 @@ Things to pay attention to:
 ]
 ----
 
+[IMPORTANT]
+====
+`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
+====
 
 === Edge objects
 
@@ -233,6 +237,11 @@ Things to pay attention to:
 In the snippet above, notice how the key names are `person_tmdbId` and `movieId` even if the mapped property names in the related node objects are `person_id` and `movie_id`.
 - if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
 - when a property list has multiple items, specify each property in a separate object within the list, and not as a single object containing them all.
+
+[IMPORTANT]
+====
+`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
+====
 
 
 === Custom queries
