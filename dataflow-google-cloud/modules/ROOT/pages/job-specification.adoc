@@ -58,16 +58,19 @@ To retrieve the Google Storage location of a file in a Cloud bucket, expand the 
 image::image$google-cloud-file-url.png[width=600]
 ====
 +
-- `format` (string) -- The format of the provided CSV file. Valid values are: `default`, `excel`, `informix`, `mongo`, `mongo_tsv`, `mysql`, `oracle`, `postgres`, `postgresql_csv`, `rfc4180`. Formats behave in accordance with link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
+- `format` (string) -- The format of the provided CSV file. +
+Valid values are: `default`, `excel`, `informix`, `mongo`, `mongo_tsv`, `mysql`, `oracle`, `postgres`, `postgresql_csv`, `rfc4180`. +
+Formats behave in accordance with link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
 - `column_delimiter` (string) -- CSV field delimiter.
 - `line_separator` (string) -- CSV line separator.
 - `header` (string) -- Full list of field names the CSV file contains, in order. Alternatively, the list may be restricted to only the first few columns.
 
 [NOTE]
 ====
-The field `header` must specify all columns the CSV contains, or a contiguous subset of them starting from the first. **It is not possible to specify an arbitrary subset of columns.**
+The field `header` must specify all columns the CSV contains, or a contiguous subset of them starting from the first.
+**It is not possible to specify an arbitrary subset of columns.**
 
-.Valid/Invalid `header` values given a CSV with columns `ID,name,title,rating`
+.Valid/Invalid `header` examples given a CSV with columns `ID,name,title,rating`
 [%collapsible]
 =====
 [cols="1,5m"]

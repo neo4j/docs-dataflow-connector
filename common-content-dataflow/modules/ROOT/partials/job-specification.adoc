@@ -457,7 +457,7 @@ If set to `true`, all properties will get range indexes created already! (or?)
 
 
 [#query-objects]
-=== Custom queries
+=== Custom query objects
 
 Custom query targets are useful when the import requires a complex query that does not easily fit into the node/relationship targets format.
 

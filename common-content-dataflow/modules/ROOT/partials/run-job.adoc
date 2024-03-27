@@ -14,7 +14,7 @@ The connection metadata is specified either as a secret or a plain-text JSON res
 **Exactly one of these options must be specified!**
 
 - **Optional Parameters > Path to the Neo4j connection metadata** -- The JSON connection information file (from a Google Cloud Storage bucket).
-- **Optional Parameters > Secret ID for the Neo4j connection metadata** -- The secret ID for the JSON connection information (from Google Secret Manager).
+- **Optional Parameters > Secret ID for the Neo4j connection metadata** -- The ID of the secret containing the JSON connection information (from Google Secret Manager).
 
 [.shadow]
 image::{common}:image$dataflow-job-example.png[width=600]
