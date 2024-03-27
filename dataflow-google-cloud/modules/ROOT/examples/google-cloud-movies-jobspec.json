@@ -60,10 +60,6 @@
             ],
             "strings": [
               {"bornIn": "born_in"}
-            ],
-            "dates": [
-              {"born": "born"},
-              {"died": "died"}
             ]
           }
         }
@@ -90,7 +86,9 @@
               {"title": "title"}
             ],
             "floats": [
-              {"imdbRating": "rating"},
+              {"imdbRating": "rating"}
+            ],
+            "integers": [
               {"year": "year"}
             ]
           }
