@@ -39,19 +39,32 @@ tag::configuration[]
 == Configuration
 
 The `config` object contains global configuration for the import job.
+All settings have a default, so you don't need to specify them unless you wish to alter them.
 
 .Configuration settings and their defaults
 [source, JSON]
 ----
 "config": {
   "reset_db": false,
-  "index_all_properties": false
+  "index_all_properties": false,
+  "node_write_batch_size": 5000,
+  "edge_write_batch_size": 1000,
+  "custom_query_batch_size": 1000,
+  "node_write_parallelism": 10,
+  "edge_write_parallelism": 1,
+  "custom_query_parallelism": 1
 }
 ----
 
 - `reset_db` (bool) -- Whether to clear the target database before importing.
 Deletes data, indexes, and constraints.
-- `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/managing-indexes/[Cypher -> Indexes for search performance].
+- `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
+- `node_write_batch_size` (int) -- Number of nodes to be processed for each transaction.
+- `edge_write_batch_size` (int) -- Number of relationships to be processed for each transaction.
+- `custom_query_batch_size` (int) -- Number of rows to be processed for each custom query.
+- `node_write_parallelism` (int) -- Number of max concurrent transactions for node targets.
+- `edge_write_parallelism` (int) -- Number of max concurrent transactions for relationship targets. Values higher than `1` should be set with care, as they may result in deadlocks.
+- `custom_query_parallelism` (int) -- Number of max concurrent transactions for custom query targets. Values higher than `1` should be set with care, as they may result in deadlocks.
 
 end::configuration[]
 

@@ -28,28 +28,27 @@ include::{common}:partial$job-specification.adoc[tags=configuration]
 
 The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
 
+Source objects must at minimum specify the attributes `type`, `name`, `urls`, and `ordered_field_names`.
+The default column delimiter and line separator are set depending on the specified `format`, according to link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
+
 .Source object specification and its defaults
 [source, json]
 ----
 {
   "type": "text",
-  "name": "movies",
-  "urls": [ "<path-to-csv>" ],
-  "format": "excel",
-  "column_delimiter": ",",
-  "line_separator": "\n",
-  "ordered_field_names": "movieId,title"
+  "name": "<sourceName>",
+  "urls": [ "<csvPath1>", "<csvPath2>", ... ],
+  "format": "default",
+  "column_delimiter": "",
+  "line_separator": "",
+  "header": "movieId,title"
 }
 ----
 
 - `type` (string) -- `text`.
 - `name` (string) -- A human-friendly label for the source (unique among all names; no spaces allowed). You will use this to reference the source from other parts of the specification file.
-- `urls` (list of strings) -- The Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
-- `format` (string) -- any of link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`] predefined formats.
-- `column_delimiter` (string) -- CSV field delimiter.
-- `line_separator` (string) -- CSV line separator.
-- `ordered_field_names` (string) -- List of field names the CSV file contains, in order.
-
+- `urls` (list of strings) -- The Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`). +
++
 .How to retrieve the Google Storage location of a file?
 [%collapsible]
 ====
@@ -58,11 +57,43 @@ To retrieve the Google Storage location of a file in a Cloud bucket, expand the 
 [.shadow]
 image::image$google-cloud-file-url.png[width=600]
 ====
++
+- `format` (string) -- The format of the provided CSV file. Valid values are: `default`, `excel`, `informix`, `mongo`, `mongo_tsv`, `mysql`, `oracle`, `postgres`, `postgresql_csv`, `rfc4180`. Formats behave in accordance with link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
+- `column_delimiter` (string) -- CSV field delimiter.
+- `line_separator` (string) -- CSV line separator.
+- `header` (string) -- Full list of field names the CSV file contains, in order. Alternatively, the list may be restricted to only the first few columns.
 
-CSV files must fulfill some constraints:
+[NOTE]
+====
+The field `header` must specify all columns the CSV contains, or a contiguous subset of them starting from the first. **It is not possible to specify an arbitrary subset of columns.**
 
-- **They should not contain headers**. Column names should be specified in the `ordered_field_names` attributes, and files should contain data rows only.
-- They should not contain empty rows.
+.Valid/Invalid `header` values given a CSV with columns `ID,name,title,rating`
+[%collapsible]
+=====
+[cols="1,5m"]
+|===
+|label:yes[Valid]
+|ID,name,title,rating
+
+|label:yes[Valid]
+|ID,name
+
+|label:yes[Valid]
+|ID,name,title
+
+|label:no[Invalid]
+|ID,rating
+
+|===
+=====
+====
+
+
+Source CSV files must fulfill some constraints:
+
+- **They should not contain empty rows.**
+- **They should not contain a header row.** +
+Column names should be specified in the `header` attributes, and files should contain data rows only. A CSV with a header row will result in an extra imported entity, with the column names as data values.
 
 
 include::{common}:partial$job-specification.adoc[tags=targets]
