@@ -7,10 +7,19 @@
 include::{common}:partial$job-specification.adoc[tags=intro]
 
 
+[#full-example]
+.A full job specification example
+====
+Here below is an example job specification file that works out of the box to import the publicly-available `movies` dataset.
+
+The next sections break it down and provide in-context information for each part.
+We recommend reading this guide side by side with the job specification example.
+
 [source, json]
 ----
-include::../examples/google-cloud-movies-jobspec.json[]
+include::example$google-cloud-movies-jobspec.json[]
 ----
+====
 
 
 include::{common}:partial$job-specification.adoc[tags=configuration]
@@ -20,26 +29,27 @@ include::{common}:partial$job-specification.adoc[tags=configuration]
 
 The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
 
-To import data from a CSV file, six attributes are compulsory.
-
+.Source object specification and its defaults
 [source, json]
 ----
 {
   "type": "text",
   "name": "movies",
-  "uri": "<path-to-csv>",
-  "format": "EXCEL",
-  "delimiter": ",",
+  "urls": [ "<path-to-csv>" ],
+  "format": "excel",
+  "column_delimiter": ",",
+  "line_separator": "\n",
   "ordered_field_names": "movieId,title"
 }
 ----
 
 - `type` (string) -- `text`.
-- `name` (string) -- a human-friendly label for the source (unique among all sources). You will use this to reference the source in the targets section.
-- `uri` (string) -- the Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
+- `name` (string) -- A human-friendly label for the source (unique among all names; no spaces allowed). You will use this to reference the source from other parts of the specification file.
+- `urls` (list of strings) -- The Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
 - `format` (string) -- any of link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`] predefined formats.
-- `delimiter` (string) -- CSV field delimiter.
-- `ordered_field_names` (string) -- list of field names the CSV file contains, in order.
+- `column_delimiter` (string) -- CSV field delimiter.
+- `line_separator` (string) -- CSV line separator.
+- `ordered_field_names` (string) -- List of field names the CSV file contains, in order.
 
 .How to retrieve the Google Storage location of a file?
 [%collapsible]
@@ -52,8 +62,8 @@ image::image$google-cloud-file-url.png[width=600]
 
 CSV files must fulfill some constraints:
 
-- **they should not contain headers**. Column names should be specified in the `ordered_field_names` attributes, and files should contain data rows only.
-- they should not contain empty rows.
+- **They should not contain headers**. Column names should be specified in the `ordered_field_names` attributes, and files should contain data rows only.
+- They should not contain empty rows.
 
 
 include::{common}:partial$job-specification.adoc[tags=targets]
