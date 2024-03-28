@@ -13,18 +13,16 @@ include::{common}:partial$prerequisites.adoc[tags=connection-info]
 
 You need a dataset that you want to import into Neo4j.
 This should consist of a number of CSV files located in your Google Cloud Storage bucket.
+This guide provides you with a set of CSV files to get started with.
 
-This tutorial uses a subset of the `movies` dataset.
-It contains entities `Person` and `Movie`, linked together by `DIRECTED` and `ACTED_IN` relationships.
-In other words, each `Person` may have `DIRECTED` and/or `ACTED_IN` a `Movie`.
-Both entities and relationships have extra details attached to each of them.
-The data is sourced from the following files: xref:common-content-dataflow:ROOT:attachment$persons.csv[persons.csv], xref:common-content-dataflow:ROOT:attachment$movies.csv[movies.csv], xref:common-content-dataflow:ROOT:attachment$acted_in.csv[acted_in.csv], xref:common-content-dataflow:ROOT:attachment$directed.csv[directed.csv].
+Source CSV files must fulfill some constraints:
 
-[.shadow]
-image::{common}:image$movies-model.png[width=400]
+- **They should not contain empty rows.**
+- **They should not contain a header row.** +
+Specify column names in the source object definition, and leave only data rows in the files. A CSV with a header row will result in an extra imported entity, with the column names as data values.
 
 [TIP]
-Since you are moving data from a relational database into a graph database, **the data model will have to change**.
+Since you are moving data from a relational database into a graph database, **the data model is likely to change**.
 Checkout link:https://neo4j.com/docs/getting-started/data-modeling/guide-data-modeling/[Graph data modeling guidelines] to learn how to model for graph databases.
 
 

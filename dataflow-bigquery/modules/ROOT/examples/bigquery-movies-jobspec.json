@@ -1,5 +1,7 @@
 {
-  "config": { },
+  "config": {
+    "reset_db": true
+  },
   "sources": [
     {
       "type": "bigquery",
@@ -47,12 +49,12 @@
           {
             "source_field": "born",
             "target_field": "bornDate",
-            "target_property_type": "string"
+            "target_property_type": "local_date"
           },
           {
             "source_field": "died",
             "target_field": "diedDate",
-            "target_property_type": "string"
+            "target_property_type": "local_date"
           }
         ],
         "schema": {

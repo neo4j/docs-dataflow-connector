@@ -40,6 +40,14 @@ tag::full-example[]
 
 Here below is an example job specification file that works out of the box to import the publicly-available `movies` dataset.
 
+The dataset contains entities `Person` and `Movie`, linked together by `DIRECTED` and `ACTED_IN` relationships.
+In other words, each `Person` may have `DIRECTED` and/or `ACTED_IN` a `Movie`.
+Both entities and relationships have extra details attached to each of them.
+The data is sourced from the following files: xref:common-content-dataflow:ROOT:attachment$persons.csv[persons.csv], xref:common-content-dataflow:ROOT:attachment$movies.csv[movies.csv], xref:common-content-dataflow:ROOT:attachment$acted_in.csv[acted_in.csv], xref:common-content-dataflow:ROOT:attachment$directed.csv[directed.csv].
+
+[.shadow]
+image::{common}:image$movies-model.png[width=400]
+
 The next sections break it down and provide in-context information for each part.
 We recommend reading this guide side by side with the job specification example.
 
@@ -306,12 +314,12 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
     {
       "source_field": "born",
       "target_field": "bornDate",
-      "target_property_type": "string"
+      "target_property_type": "local_date"
     },
     {
       "source_field": "died",
       "target_field": "diedDate",
-      "target_property_type": "string"
+      "target_property_type": "local_date"
     }
   ],
   "schema": {
@@ -755,6 +763,22 @@ Further attributes depend on the action type.
 - `url` (string) -- The URL the HTTP request should target.
 - `headers` (object, optional) -- Request headers.
 
+.Action example for sending a `GET` request after import completes
+[source, json]
+----
+{
+  "type": "http",
+  "name": "Post load ping",
+  "stage": "end",
+  "method": "get",
+  "url": "https://neo4j.com/success",
+  "headers": {
+    "secret": "314159",
+    "moreSecret": "17320"
+  }
+}
+----
+
 =====
 
 [.include-with-Cypher-action]
@@ -767,7 +791,7 @@ Further attributes depend on the action type.
   "name": "<actionName>",
   "stage": "<stageName>",
   "query": "<cypherQuery>",
-  "execution_mode": "<transaction/autocommit>"
+  "execution_mode": "<transaction/autocommit>"  //default?
 }
 ----
 
@@ -775,7 +799,18 @@ Further attributes depend on the action type.
 - `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
 - `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
 - `query` (string) -- The Cypher query to run.
-- `execution_mode` (string, optional) -- Under what mode the query should be executed.
+- `execution_mode` (string, optional) -- Under what mode the query should be executed. Valid values are `transaction`, `autocommit`.
+
+.Action example for creating an `importJob` node after import completes
+[source, json]
+----
+{
+  "type": "cypher",
+  "name": "Post load log",
+  "stage": "end",
+  "query": "MERGE (:importJob {date: datetime()})"
+}
+----
 
 =====
 
@@ -797,16 +832,20 @@ Further attributes depend on the action type.
 - `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
 - `sql` (string) -- The SQL query to run.
 
+.Action example for sending a `GET` request after import completes
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "Post load log",
+  "stage": "end",
+  "sql": "INSERT INTO logs.imports (time) VALUES (NOW())"
+}
+----
+
 =====
 
 ====
-
-
-[#actions-example]
-=== Examples
-
-
-
 
 end::actions[]
 

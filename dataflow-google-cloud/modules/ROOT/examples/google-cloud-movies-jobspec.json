@@ -1,147 +1,168 @@
 {
   "config": {
-    "reset_db": true,
-    "index_all_properties": false
+    "reset_db": true
   },
   "sources": [
     {
       "type": "text",
       "name": "persons",
-      "uri": "gs://neo4j-examples/persons.csv",
-      "format": "EXCEL",
-      "delimiter": ",",
-      "ordered_field_names": "person_tmdbId,bio,born,bornIn,died,person_imdbId,name,person_poster,person_url"
+      "urls": "gs://neo4j-examples/persons.csv",
+      "format": "excel",
+      "header": "person_tmdbId,bio,born,bornIn,died,person_imdbId,name,person_poster,person_url"
     },
     {
       "type": "text",
       "name": "movies",
-      "uri": "gs://neo4j-examples/movies.csv",
-      "format": "EXCEL",
-      "delimiter": ",",
-      "ordered_field_names": "movieId,title,budget,countries,movie_imdbId,imdbRating,imdbVotes,languages,plot,movie_poster,released,revenue,runtime,movie_tmdbId,movie_url,year,genres"
+      "urls": "gs://neo4j-examples/movies.csv",
+      "format": "excel",
+      "header": "movieId,title,budget,countries,movie_imdbId,imdbRating,imdbVotes,languages,plot,movie_poster,released,revenue,runtime,movie_tmdbId,movie_url,year,genres"
     },
     {
       "type": "text",
       "name": "directed",
-      "uri": "gs://neo4j-examples/directed.csv",
-      "format": "EXCEL",
-      "delimiter": ",",
-      "ordered_field_names": "movieId,person_tmdbId"
+      "urls": "gs://neo4j-examples/directed.csv",
+      "format": "excel",
+      "header": "movieId,person_tmdbId"
     },
     {
       "type": "text",
       "name": "acted_in",
-      "uri": "gs://neo4j-examples/acted_in.csv",
-      "format": "EXCEL",
-      "delimiter": ",",
-      "ordered_field_names": "movieId,person_tmdbId,role"
+      "urls": "gs://neo4j-examples/acted_in.csv",
+      "format": "excel",
+      "header": "movieId,person_tmdbId,role"
     }
   ],
-  "targets": [
-    {
-      "node": {
+  "targets": {
+    "nodes": [
+      {
         "source": "persons",
         "name": "Person",
-        "mode": "merge",
-        "transform": {
-          "group": true
-        },
-        "mappings": {
-          "labels": [
-            "\"Person\""
-          ],
-          "properties": {
-            "keys": [
-              {"person_tmdbId": "id"}
-            ],
-            "unique": [],
-            "indexed": [
-              {"name": "name"}
-            ],
-            "strings": [
-              {"bornIn": "born_in"}
-            ]
+        "labels": [ "Person" ],
+        "properties": [
+          {
+            "source_field": "person_tmdbId",
+            "target_field": "id",
+            "target_property_type": "string"
+          },
+          {
+            "source_field": "name",
+            "target_field": "name",
+            "target_property_type": "string"
+          },
+          {
+            "source_field": "bornIn",
+            "target_field": "bornLocation",
+            "target_property_type": "string"
+          },
+          {
+            "source_field": "born",
+            "target_field": "bornDate",
+            "target_property_type": "local_date"
+          },
+          {
+            "source_field": "died",
+            "target_field": "diedDate",
+            "target_property_type": "local_date"
           }
+        ],
+        "schema": {
+          "key_constraints": [
+            {
+              "name": "personIdKey",
+              "label": "Person",
+              "properties": ["id"]
+            }
+          ],
+          "unique_constraints": [
+            {
+              "name": "personNameUnique",
+              "label": "Person",
+              "properties": ["name"]
+            }
+          ]
+        },
+        "transform": {  // needed?
+          "group": true
         }
-      }
-    },
-    {
-      "node": {
+      },
+      {
         "source": "movies",
         "name": "Movies",
-        "mode": "merge",
-        "transform": {
-          "group": true
-        },
-        "mappings": {
-          "labels": [
-            "\"Movie\""
-          ],
-          "properties": {
-            "keys": [
-              {"movieId": "id"}
-            ],
-            "unique": [],
-            "indexed": [
-              {"title": "title"}
-            ],
-            "floats": [
-              {"imdbRating": "rating"}
-            ],
-            "integers": [
-              {"year": "year"}
-            ]
+        "labels": [ "Movie" ],
+        "properties": [
+          {
+            "source_field": "movieId",
+            "target_field": "id",
+            "target_property_type": "string"
+          },
+          {
+            "source_field": "title",
+            "target_field": "title",
+            "target_property_type": "string"
+          },
+          {
+            "source_field": "year",
+            "target_field": "releaseYear",
+            "target_property_type": "string"
+          },
+          {
+            "source_field": "imdbRating",
+            "target_field": "imdbRating",
+            "target_property_type": "float"
           }
+        ],
+        "schema": {
+          "key_constraints": [
+            {
+              "name": "movieIdKey",
+              "label": "Movie",
+              "properties": ["id"]
+            }
+          ],
+          "unique_constraints": [
+            {
+              "name": "movieTitleUnique",
+              "label": "Movie",
+              "properties": ["title"]
+            }
+          ]
+        },
+        "transform": {  // needed?
+          "group": true
         }
       }
-    },
-    {
-      "edge": {
+    ],
+    "relationships": [
+      {
         "source": "directed",
         "name": "Directed",
-        "mode": "merge",
-        "transform": {
+        "type": "DIRECTED",
+        "start_node_reference": "Persons",
+        "end_node_reference": "Movies",
+        "properties": [ ],
+        "schema": { },
+        "transform": {  // needed?
           "group": true
-        },
-        "mappings": {
-          "type": "\"DIRECTED\"",
-          "source": {
-            "label": "\"Person\"",
-            "key": {"person_tmdbId": "id"}
-          },
-          "target": {
-            "label": "\"Movie\"",
-            "key": {"movieId": "id"}
-          },
-          "properties": {}
         }
-      }
-    },
-    {
-      "edge": {
+      },
+      {
         "source": "acted_in",
         "name": "Acted_in",
-        "mode": "merge",
-        "transform": {
-          "group": true
-        },
-        "mappings": {
-          "type": "\"ACTED_IN\"",
-          "source": {
-            "label": "\"Person\"",
-            "key": {"person_tmdbId": "id"}
-          },
-          "target": {
-            "label": "\"Movie\"",
-            "key": {"movieId": "id"}
-          },
-          "properties": {
-            "strings": [
-              {"role": "role"}
-            ]
+        "type": "ACTED_IN",
+        "start_node_reference": "Persons",
+        "end_node_reference": "Movies",
+        "properties": [
+          {
+            "source_field": "role",
+            "target_field": "role",
+            "target_property_type": "string"
           }
+        ],
+        "schema": { },
+        "transform": {  // needed?
+          "group": true
         }
       }
-    }
-  ]
+    ]
+  }
 }
