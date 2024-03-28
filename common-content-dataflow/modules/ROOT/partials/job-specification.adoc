@@ -240,7 +240,7 @@ In the snippet above, notice how the key names are `person_tmdbId` and `movieId`
 
 [IMPORTANT]
 ====
-`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
+`keys`, `unique`, and `mandatory` options require Neo4j/Aura Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
 ====
 
 
