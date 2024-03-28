@@ -286,7 +286,7 @@ Relationship entities must be grouped in a list keyed `relationships` inside the
 
 Each relationship object must at minimum have attributes `source`, `name`, and `type`.
 
-It must also contain information on what types of nodes the relationship links together. You provide this through a combination of `start_node`/`start_node_reference` and `end_node`/`end_node_reference`.
+It must also contain information about which node targets the relationship links together. You provide this through a combination of `start_node`/`start_node_reference` and `end_node`/`end_node_reference`. (?)
 
 [source, json]
 ----
@@ -302,8 +302,8 @@ It must also contain information on what types of nodes the relationship links t
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
 - `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
 - `type` (string) -- link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship-type[Type] to assign to the relationship.
-- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship. `start_node` can play the same role, except it takes a xref:node-objects[full node object].
-- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship. `end_node` can play the same role, except it takes a xref:node-objects[full node object].
+- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship (`start_node` can play the same role, except it takes a xref:node-objects[full node object]).
+- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship (`end_node` can play the same role, except it takes a xref:node-objects[full node object]).
 
 
 ==== Relationship properties
