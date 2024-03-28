@@ -15,7 +15,7 @@ It consists of a JSON object with four sections:
 [source, JSON]
 ----
 {
-  "config": {},
+  "config": { ... },
   "sources": [
     { ... }
   ],
@@ -111,7 +111,9 @@ Node entities must be grouped in a list keyed `nodes` inside the `targets` objec
 }
 ----
 
-==== Node compulsory fields
+
+[#node-compulsory-fields]
+==== Compulsory fields
 
 Each node object must at minimum have attributes `source`, `name`, `labels`, and `properties`.
 
@@ -137,11 +139,12 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
 - `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
 - `labels` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[Labels] to mark the nodes with.
 - `properties` (list of objects) -- Mapping between source columns and node properties. +
-Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
+Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
 {target_property_type-valid-values-extra}
 
 
-==== Node schema definition
+[#node-schema]
+==== Schema definition
 
 You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexes] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints] on the imported nodes through the `schema` object.
 The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each entity type.
@@ -238,7 +241,8 @@ Alternatively, use the `where` attribute in a xref:source-transformations[source
 The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
-==== Node target configuration
+[#node-config]
+==== Configuration
 
 .Node target config options and their defaults
 [source, JSON]
@@ -260,8 +264,64 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
 
-==== Node target full example
+[#node-example]
+==== Example
 
+.A node object example for import of `Person` nodes
+[source, json]
+----
+{
+  "source": "persons",
+  "name": "Person",
+  "labels": [ "Person" ],
+  "properties": [
+    {
+      "source_field": "person_tmdbId",
+      "target_field": "id",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "name",
+      "target_field": "name",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "bornIn",
+      "target_field": "bornLocation",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "born",
+      "target_field": "bornDate",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "died",
+      "target_field": "diedDate",
+      "target_property_type": "string"
+    }
+  ],
+  "schema": {
+    "key_constraints": [
+      {
+        "name": "personIdKey",
+        "label": "Person",
+        "properties": ["id"]
+      }
+    ],
+    "unique_constraints": [
+      {
+        "name": "personNameUnique",
+        "label": "Person",
+        "properties": ["name"]
+      }
+    ]
+  },
+  "transform": {  // needed?
+    "group": true
+  }
+}
+----
 
 '''
 
@@ -284,7 +344,9 @@ Relationship entities must be grouped in a list keyed `relationships` inside the
 }
 ----
 
-==== Relationship compulsory fields
+
+[#relationship-compulsory-fields]
+==== Compulsory fields
 
 Each relationship object must at minimum have attributes `source`, `name`, and `type`.
 
@@ -313,7 +375,8 @@ It must also contain information about which node targets the relationship links
 ====
 
 
-==== Relationship properties
+[#relationship-properties]
+==== Properties
 
 Relationships may also map source columns as properties.
 
@@ -334,11 +397,12 @@ Relationships may also map source columns as properties.
 ----
 
 - `properties` (list of objects) -- Mapping between source columns and relationship properties. +
-Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
+Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
 {target_property_type-valid-values-extra}
 
 
-==== Relationship schema definition
+[#relationship-schema]
+==== Schema definition
 
 You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexes] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints] on the imported relationships through the `schema` object.
 The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each relationship type.
@@ -435,7 +499,8 @@ Alternatively, use the `where` attribute in a xref:source-transformations[source
 The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
-==== Relationship target configuration
+[#relationship-config]
+==== Configuration
 
 .Relationship target config options and their defaults
 [source, JSON]
@@ -459,8 +524,31 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
 
-==== Relationship target full example
+[#relationship-example]
+==== Example
 
+.A relationship object example for import of `ACTED_IN` relationships
+[source, json]
+----
+{
+  "source": "acted_in",
+  "name": "Acted_in",
+  "type": "ACTED_IN",
+  "start_node_reference": "Persons",
+  "end_node_reference": "Movies",
+  "properties": [
+    {
+      "source_field": "role",
+      "target_field": "role",
+      "target_property_type": "string"
+    }
+  ],
+  "schema": { },
+  "transform": {  // needed?
+    "group": true
+  }
+}
+----
 
 '''
 
@@ -469,6 +557,7 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 === Custom query objects
 
 Custom query targets are useful when the import requires a complex query that does not easily fit into the node/relationship targets format.
+Query targets receive batches of rows through the variable `$rows`.
 
 Custom queries must be grouped in a list keyed `queries` inside the `targets` object.
 
@@ -485,8 +574,14 @@ Custom queries must be grouped in a list keyed `queries` inside the `targets` ob
 }
 ----
 
+[WARNING]
+Do not use custom queries to run Cypher that does not directly depend on a source; use xref:_prepost_load_actions[actions] instead.
+One-off queries, especially if not idempotent, are not fit to use in custom query targets.
+The reason for this is that queries from targets are run in batches, so a custom query may be run several times depending on the number of `$rows` batches extracted from the source.
 
-==== Query compulsory fields
+
+[#query-compulsory-fields]
+==== Compulsory fields
 
 Each relationship object must at minimum have attributes `source`, `name`, and `query`.
 
@@ -505,13 +600,9 @@ It must also contain information on what types of nodes the relationship links t
 - `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
 - `query` (string) -- A Cypher query. Data from the source is available as a list in the parameter `$rows`.
 
-[IMPORTANT]
-====
-`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
-====
 
-
-==== Query target configuration
+[#query-config]
+==== Configuration
 
 .Query target config options and their defaults
 [source, JSON]
@@ -527,8 +618,10 @@ It must also contain information on what types of nodes the relationship links t
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
 
-==== Query target full example
+[#query-example]
+==== Example
 
+.A query object example for import of `Person` nodes and setting a date on creation
 [source, JSON]
 ----
 {
@@ -540,16 +633,7 @@ It must also contain information on what types of nodes the relationship links t
 }
 ----
 
-[WARNING]
-Do not use custom queries to run Cypher that does not directly depend on a source; use xref:_prepost_load_actions[actions] instead.
-One-off queries, especially if not idempotent, are not fit to use in custom query targets.
-The reason for this is that queries from targets are run in batches, so a custom query may be run several times depending on the number of `$rows` batches extracted from the source.
-
 end::targets[]
-
-
-tag::target_property_type-valid-values[]
-
 
 
 tag::transformations[]
@@ -587,8 +671,27 @@ Each target can optionally have a `source_transformation` attribute containing a
 - `where` (string) -- Filters out source data prior to import (with an SQL `WHERE` clause format).
 - `order_by` (list of objects) -- Enforces ordering on the source. What shape should expression have?
 
-[discrete]
-=== Transformation full example
+[#transformation-example]
+=== Example
+.A transformation object example on a fictitious data set
+[source, json]
+----
+{
+  "enable_grouping": true,
+  "aggregations": [
+    {
+      "expression": "SUM(unit_price*quantity)",
+      "field_name": "total_amount_sold"
+    },
+    {
+      "expression": "SUM(quantity)",
+      "field_name": "total_quantity_sold"
+    }
+  ],
+  "limit": 50,
+  "where": "sourceId IS NOT NULL"
+}
+----
 
 end::transformations[]
 
@@ -686,8 +789,8 @@ Further attributes depend on the action type.
 ====
 
 
-[discrete]
-=== Actions full examples
+[#actions-example]
+=== Examples
 
 
 

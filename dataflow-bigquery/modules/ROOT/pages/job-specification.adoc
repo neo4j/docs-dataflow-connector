@@ -1,5 +1,5 @@
 :target_property_type-valid-values-extra: Each property type (except byte_array) is also available in its "_array" form (i.e. date_array, string_array, etc) for BigQuery "repeated" column types.
-
+:page-toclevels: 3
 = Create a job specification file
 
 
@@ -48,6 +48,18 @@ The `sources` section contains the definitions of the data sources, as a list. A
 
 [WARNING]
 Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
+
+[#source-full-example]
+=== Example
+.An example of a source object to import rows from a `persons` table
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "persons",
+  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons"
+}
+----
 
 
 include::{common}:partial$job-specification.adoc[tags=targets]
