@@ -15,6 +15,13 @@ If you don't have an instance yet, you have two options:
 
 - sign-up for a free link:https://neo4j.com/cloud/aura-free/[AuraDB] instance
 - install and self-host Neo4j in a location that is publicly accessible (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
+
+[IMPORTANT]
+====
+The template uses link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints], some of which are only available in Neo4j/Aura Enterprise Edition installations.
+Although the Dataflow jobs are able to run **on Neo4j Community Edition instances, most constraints will not be created**.
+You have thus to ensure that the source data and job specification are prepared accordingly.
+====
 // end::neo4j[]
 
 

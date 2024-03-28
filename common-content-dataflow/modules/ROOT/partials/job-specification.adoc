@@ -305,6 +305,11 @@ It must also contain information about which node targets the relationship links
 - `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship (`start_node` can play the same role, except it takes a xref:node-objects[full node object]).
 - `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship (`end_node` can play the same role, except it takes a xref:node-objects[full node object]).
 
+[IMPORTANT]
+====
+`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
+====
+
 
 ==== Relationship properties
 
@@ -495,6 +500,11 @@ It must also contain information on what types of nodes the relationship links t
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
 - `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
 - `query` (string) -- A Cypher query. Data from the source is available as a list in the parameter `$rows`.
+
+[IMPORTANT]
+====
+`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
+====
 
 
 ==== Query target configuration
