@@ -1,6 +1,6 @@
 name: dataflow-google-cloud
 title: Dataflow Flex Template for Google Cloud to Neo4j
-version: ~
+version: 1.0
 # display_version: '1.0-preview'
 start_page: ROOT:index.adoc
 nav:
