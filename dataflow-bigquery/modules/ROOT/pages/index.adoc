@@ -8,4 +8,4 @@ This guide walks you through how to import an example BigQuery dataset into a Ne
 It also provides a public dataset you can experiment with, before you go on and create an import job for you own dataset.
 
 [NOTE]
-To import data from CSV files rather than BigQuery, checkout the link:https://neo4j.com/docs/dataflow-google-cloud/[Dataflow Flex Template for Google Cloud to Neo4j].
+To import data from CSV files rather than BigQuery, checkout the xref:{page-component-version}@dataflow-google-cloud::index.adoc[Dataflow Flex Template for Google Cloud to Neo4j].
