@@ -98,6 +98,13 @@ To log into a server having a custom authentication scheme.
 =====
 ====
 
+[IMPORTANT]
+====
+The template uses link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints], some of which are only available in Neo4j/Aura Enterprise Edition installations.
+Although the Dataflow jobs are able to run **on Neo4j Community Edition instances, most constraints will not be created**.
+You have thus to ensure that the source data and job specification are prepared accordingly.
+====
+
 // end::neo4j[]
 
 
