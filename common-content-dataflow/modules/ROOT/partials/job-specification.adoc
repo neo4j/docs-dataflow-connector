@@ -146,6 +146,9 @@ Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes ba
 You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexes] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints] on the imported nodes through the `schema` object.
 The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each entity type.
 
+[TIP]
+If the global config `index_all_properties` is set to `true`, all properties will get range indexes created already. (or?)
+
 .Node target schema definition and their defaults
 [source, json]
 ----
@@ -231,9 +234,8 @@ Where the attributes for each object are:
 If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
 Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
-[TIP]
-Be mindful of the global config `index_all_properties`.
-If set to `true`, all properties will get range indexes created already! (or?)
+[IMPORTANT]
+The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
 ==== Node target configuration
@@ -341,6 +343,9 @@ Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes ba
 You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexes] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints] on the imported relationships through the `schema` object.
 The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each relationship type.
 
+[TIP]
+If the global config `index_all_properties` is set to `true`, all properties will get range indexes created already. (or?)
+
 .Relationship target schema definition and their defaults
 [source, json]
 ----
@@ -426,9 +431,8 @@ Where the attributes for each object are:
 If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
 Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
-[TIP]
-Be mindful of the global config `index_all_properties`.
-If set to `true`, all properties will get range indexes created already! (or?)
+[IMPORTANT]
+The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
 ==== Relationship target configuration
