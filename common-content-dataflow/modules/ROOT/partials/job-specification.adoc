@@ -3,30 +3,29 @@
 tag::intro[]
 
 The job configuration file instructs Dataflow on how to run the import (where to source the data from, how to map it into Neo4j, etc).
-
-It consists of a JSON object with four sections:
-
-- `config` -- Global flags affecting how the import is performed (optional)
-- `sources` -- Data source definitions (relational)
-- `targets` -- Data target definitions (graph: nodes/relationships)
-- `actions` -- Pre/Post-load actions (optional)
+It consists of a JSON object with four sections.
 
 .Job specification JSON skeleton
 [source, JSON]
 ----
 {
-  "config": { ... },
-  "sources": [
+  "config": { ... },  // <1>
+  "sources": [  // <2>
     { ... }
   ],
-  "targets": [
+  "targets": [  // <3>
     { ... }
   ],
-  "actions": [
+  "actions": [  // <4>
     { ... }
   ]
 }
 ----
+
+<1> `config` -- Global flags affecting how the import is performed (optional)
+<2> `sources` -- Data source definitions (relational)
+<3> `targets` -- Data target definitions (graph: nodes/relationships)
+<4> `actions` -- Pre/Post-load actions (optional)
 
 At a high level, the job fetches data from `sources` and transforms/imports them into the `targets`.
 
