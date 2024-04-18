@@ -1,6 +1,4 @@
-:page-role: beta
-
-= Dataflow Flex Template for Google Cloud to Neo4j
+= Introduction
 
 The Flex Template allows to import a dataset into a Neo4j database through a Dataflow job, sourcing data from CSV files hosted in Google Cloud Storage buckets.
 It also allows to manipulate and transform the data at various steps of the import.

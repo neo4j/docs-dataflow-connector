@@ -1,6 +1,4 @@
-:page-role: beta
-
-= Dataflow Flex Template for BigQuery to Neo4j
+= Introduction
 
 The Flex Template allows to import data from a BigQuery dataset into a Neo4j database, through a Dataflow job.
 It also allows to manipulate and transform the data at various steps of the import.
