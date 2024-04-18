@@ -1,5 +1,3 @@
-:page-role: beta
-
 = Create a job specification file
 
 
