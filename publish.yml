@@ -7,6 +7,7 @@ content:
   sources:
   - url: ./
     branches: ['HEAD']
+    edit_url: https://github.com/neo4j/docs-dataflow-connector/tree/dev/{path}
     start_paths:
     - dataflow-google-cloud
     - dataflow-bigquery
@@ -49,7 +50,7 @@ asciidoc:
     page-terms-to-mark: Cypher
     page-pagination: true
     page-no-canonical: true
-    page-origin-private: true
+    page-origin-private: false
     page-hide-toc: false
     page-mixpanel: 4bfb2414ab973c741b6f067bf06d5575
     includePDF: false
