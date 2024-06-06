@@ -1,27 +1,21 @@
 = Prerequisites
 
+include::{common}:partial$prerequisites.adoc[tags=intro]
+
 include::{common}:partial$prerequisites.adoc[tags=neo4j]
 
-include::{common}:partial$prerequisites.adoc[tags=secret]
+include::{common}:partial$prerequisites.adoc[tags=gcs-bucket]
 
-include::{common}:partial$prerequisites.adoc[tags=google-cloud-storage]
+include::{common}:partial$prerequisites.adoc[tags=connection-info]
 
 
 == Dataset to import
 
 You need a link:https://console.cloud.google.com/bigquery[Google BigQuery] dataset that you want to import into Neo4j.
-
-This tutorial uses a subset of the `movies` dataset.
-It contains entities `Person` and `Movie`, linked together by `DIRECTED` and `ACTED_IN` relationships.
-In other words, each `Person` may have `DIRECTED` and/or `ACTED_IN` a `Movie`.
-Both entities and relationships have extra details attached to each of them.
-The data is sourced from the following files: xref:common-content-dataflow:ROOT:attachment$persons.csv[persons.csv], xref:common-content-dataflow:ROOT:attachment$movies.csv[movies.csv], xref:common-content-dataflow:ROOT:attachment$acted_in.csv[acted_in.csv], xref:common-content-dataflow:ROOT:attachment$directed.csv[directed.csv].
-
-[.shadow]
-image::{common}:image$movies-model.png[width=400]
+This guide provides you with one to get started with.
 
 [TIP]
-Since you are moving data from a relational database into a graph database, **the data model will have to change**.
+Since you are moving data from a relational database into a graph database, **the data model is likely to change**.
 Checkout link:https://neo4j.com/docs/getting-started/data-modeling/guide-data-modeling/[Graph data modeling guidelines] to learn how to model for graph databases.
 
 
