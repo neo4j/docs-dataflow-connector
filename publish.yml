@@ -6,7 +6,7 @@ site:
 content:
   sources:
   - url: ./
-    branches: ['HEAD']
+    branches: ['0.1', 'HEAD']
     start_paths:
     - dataflow-google-cloud
     - dataflow-bigquery
