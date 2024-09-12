@@ -31,7 +31,7 @@ The `sources` section contains the definitions of the data sources, as a list. A
 {
   "type": "bigquery",
   "name": "<sourceName>",
-  "query": "<bigquerySqlQuery>"
+  "query": "<bigQuerySqlQuery>"
 }
 ----
 

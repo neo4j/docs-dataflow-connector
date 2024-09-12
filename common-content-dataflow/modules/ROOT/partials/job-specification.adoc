@@ -24,8 +24,8 @@ It consists of a JSON object with four sections.
 
 <1> `config` -- Global flags affecting how the import is performed (optional)
 <2> `sources` -- Data source definitions (relational)
-<3> `targets` -- Data target definitions (graph: nodes/relationships)
-<4> `actions` -- Pre/Post-load actions (optional)
+<3> `targets` -- Data target definitions (graph: nodes/relationships/Cypher queries)
+<4> `actions` -- One-off actions (optional)
 
 At a high level, the job fetches data from `sources` and transforms/imports them into the `targets`.
 
@@ -67,24 +67,24 @@ All settings have a default, so you don't need to specify them unless you wish t
 "config": {
   "reset_db": false,
   "index_all_properties": false,
-  "node_write_batch_size": 5000,
-  "edge_write_batch_size": 1000,
-  "custom_query_batch_size": 1000,
-  "node_write_parallelism": 10,
-  "edge_write_parallelism": 1,
-  "custom_query_parallelism": 1
+  "node_target_batch_size": 5000,
+  "relationship_target_batch_size": 1000,
+  "query_target_batch_size": 1000,
+  "node_target_parallelism": 10,
+  "relationship_target_parallelism": 1,
+  "query_target_parallelism": 1
 }
 ----
 
 - `reset_db` (bool) -- Whether to clear the target database before importing.
 Deletes data, indexes, and constraints.
 - `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
-- `node_write_batch_size` (int) -- Number of nodes to be processed for each transaction.
-- `edge_write_batch_size` (int) -- Number of relationships to be processed for each transaction.
-- `custom_query_batch_size` (int) -- Number of rows to be processed for each custom query.
-- `node_write_parallelism` (int) -- Number of max concurrent transactions for node targets.
-- `edge_write_parallelism` (int) -- Number of max concurrent transactions for relationship targets. Values higher than `1` should be set with care, as they may result in deadlocks.
-- `custom_query_parallelism` (int) -- Number of max concurrent transactions for custom query targets. Values higher than `1` should be set with care, as they may result in deadlocks.
+- `node_target_batch_size` (int) -- Number of nodes to be processed for each transaction.
+- `relationship_target_batch_size` (int) -- Number of relationships to be processed for each transaction.
+- `query_target_batch_size` (int) -- Number of rows to be processed for each custom query.
+- `node_target_parallelism` (int) -- Number of max concurrent transactions for node targets per worker.
+- `relationship_target_parallelism` (int) -- Number of max concurrent transactions for relationship targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
+- `query_target_parallelism` (int) -- Number of max concurrent transactions for Cypher query targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
 
 end::configuration[]
 
@@ -110,8 +110,9 @@ It is also possible to run custom Cypher queries.
 }
 ----
 
-By default, **you do not have to think about dependencies between nodes and relationships**, as the importer compiles a tree of dependencies that ensures requirements for each target are fulfilled ahead of its import.
-It is however possible to alter the default behavior and customize the ordering of targets.
+By default, **you do not have to think about dependencies between nodes and relationships**.
+Relationship targets are always processed after the targets corresponding to their start and end node.
+It is however possible to add other targets as dependencies.
 
 
 [#node-objects]
@@ -145,7 +146,7 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
   "labels": ["<label1>", "<label2>", ...],
   "properties": [
     {
-      "source_field": "<bigqueryColumnName>",
+      "source_field": "<bigQueryColumnName>",
       "target_field": "<neo4jPropertyName>",
       "target_property_type": "<neo4jPropertyType>"
     },
@@ -156,12 +157,11 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
 ----
 
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
+- `name` (string) -- A human-friendly name for the target (unique among all names).
 - `labels` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[Labels] to mark the nodes with.
 - `properties` (list of objects) -- Mapping between source columns and node properties. +
 Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
 {target_property_type-valid-values-extra}
-
 
 [#node-schema]
 ==== Schema definition
@@ -170,7 +170,7 @@ You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexe
 The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each entity type.
 
 [TIP]
-If the global config `index_all_properties` is set to `true`, all properties will get range indexes created already. (or?)
+If the global config `index_all_properties` is set to `true`, all properties will be indexed with range indexes.
 
 .Node target schema definition and their defaults
 [source, json]
@@ -178,7 +178,7 @@ If the global config `index_all_properties` is set to `true`, all properties wil
 {
   ...
   "schema": {
-    "enable_type_constraints": true,  // works?
+    "enable_type_constraints": true,
     "key_constraints": [
       {
         "name": "<constraintName>",
@@ -272,15 +272,15 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
   "active": true,
   "write_mode": "merge",
   "source_transformations": {
-    "enable_grouping": true  // is this on by defult?
+    "enable_grouping": true
   },
   "depends_on": ["<dependencyTargetName1>", "<dependencyTargetName2>", ...]
 }
 ----
 
-- `active` (bool) -- Whether the target should be included in the import.
+- `active` (bool) -- Whether the target should be included in the import (default: `true`).
 - `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
-- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
+- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will append the SQL clause `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
 
@@ -336,9 +336,6 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
         "properties": ["name"]
       }
     ]
-  },
-  "transform": {  // needed?
-    "group": true
   }
 }
 ----
@@ -370,7 +367,7 @@ Relationship entities must be grouped in a list keyed `relationships` inside the
 
 Each relationship object must at minimum have attributes `source`, `name`, and `type`.
 
-It must also contain information about which node targets the relationship links together. You provide this through a combination of `start_node`/`start_node_reference` and `end_node`/`end_node_reference`. (?)
+It must also contain information about which node targets the relationship links together. You provide this through `start_node_reference` and `end_node_reference`.
 
 [source, json]
 ----
@@ -378,16 +375,16 @@ It must also contain information about which node targets the relationship links
   "source": "<sourceName>",
   "name": "<targetName>",
   "type": "<relationshipType>",
-  "start_node_reference": "<nodeTargetName>",  // or "start_node": { nodeObj },
-  "end_node_reference": "<nodeTargetName>"  // or "end_node": { nodeObj }
+  "start_node_reference": "<nodeTargetName>",
+  "end_node_reference": "<nodeTargetName>"
 }
 ----
 
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
+- `name` (string) -- A human-friendly name for the target (unique among all names).
 - `type` (string) -- link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship-type[Type] to assign to the relationship.
-- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship (`start_node` can play the same role, except it takes a xref:node-objects[full node object]).
-- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship (`end_node` can play the same role, except it takes a xref:node-objects[full node object]).
+- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship.
+- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship.
 
 [IMPORTANT]
 ====
@@ -406,7 +403,7 @@ Relationships may also map source columns as properties.
   ...
   "properties": [
     {
-      "source_field": "<bigqueryColumnName>",
+      "source_field": "<bigQueryColumnName>",
       "target_field": "<neo4jPropertyName>",
       "target_property_type": "<neo4jPropertyType>"
     },
@@ -428,7 +425,7 @@ You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexe
 The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each relationship type.
 
 [TIP]
-If the global config `index_all_properties` is set to `true`, all properties will get range indexes created already. (or?)
+If the global config `index_all_properties` is set to `true`, all properties will be indexed with range indexes.
 
 .Relationship target schema definition and their defaults
 [source, json]
@@ -436,7 +433,7 @@ If the global config `index_all_properties` is set to `true`, all properties wil
 {
   ...
   "schema": {
-    "enable_type_constraints": true,  // works?
+    "enable_type_constraints": true,
     "key_constraints": [
       {
         "name": "<constraintName>",
@@ -506,7 +503,7 @@ If the global config `index_all_properties` is set to `true`, all properties wil
 Where the attributes for each object are:
 
 - `name` (string) -- The name of the index or constraint to be created in Neo4j.
-- `type` (string) or `types` (list of strings) -- The type(s) on which the index or constraint should be enforced upon.
+- `type` (string) -- The type on which the index or constraint should be enforced upon.
 - `property` (string) or `properties` (list of strings) -- The property(s) on which the index or constraint should be enforced upon.
 - `options` (object) -- The options with which the index or constraint should be created with (refer to the individual pages for each link:https://neo4j.com/docs/cypher-manual/current/indexes/[index] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraint] type). When present, it is optional, except for vector indexes where it is mandatory.
 
@@ -531,7 +528,7 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
   "node_match_mode": "merge",
   "write_mode": "merge",
   "source_transformations": {
-    "enable_grouping": true  // is this on by defult?
+    "enable_grouping": true
   },
   "depends_on": ["<dependencyTargetName1>", "<dependencyTargetName2>", ...]
 }
@@ -562,19 +559,15 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
       "target_field": "role",
       "target_property_type": "string"
     }
-  ],
-  "schema": { },
-  "transform": {  // needed?
-    "group": true
-  }
+  ]
 }
 ----
 
 '''
 
 
-[#query-objects]
-=== Custom query objects
+[#query-targets]
+=== Custom query targets
 
 Custom query targets are useful when the import requires a complex query that does not easily fit into the node/relationship targets format.
 Query targets receive batches of rows through the variable `$rows`.
@@ -595,7 +588,7 @@ Custom queries must be grouped in a list keyed `queries` inside the `targets` ob
 ----
 
 [WARNING]
-Do not use custom queries to run Cypher that does not directly depend on a source; use xref:_prepost_load_actions[actions] instead.
+Do not use custom queries to run Cypher that does not directly depend on a source; use xref:actions[actions] instead.
 One-off queries, especially if not idempotent, are not fit to use in custom query targets.
 The reason for this is that queries from targets are run in batches, so a custom query may be run several times depending on the number of `$rows` batches extracted from the source.
 
@@ -603,9 +596,7 @@ The reason for this is that queries from targets are run in batches, so a custom
 [#query-compulsory-fields]
 ==== Compulsory fields
 
-Each relationship object must at minimum have attributes `source`, `name`, and `query`.
-
-It must also contain information on what types of nodes the relationship links together. You provide this through a combination of `start_node`/`start_node_reference` and `end_node`/`end_node_reference`.
+Each query target must at minimum have attributes `source`, `name`, and `query`.
 
 [source, json]
 ----
@@ -617,7 +608,7 @@ It must also contain information on what types of nodes the relationship links t
 ----
 
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- A human-friendly name for the target (unique among all names; no spaces allowed).
+- `name` (string) -- A human-friendly name for the target (unique among all names).
 - `query` (string) -- A Cypher query. Data from the source is available as a list in the parameter `$rows`.
 
 
@@ -661,7 +652,7 @@ tag::transformations[]
 [#source-transformations]
 == Source transformations
 
-Each target can optionally have a `source_transformation` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for import into Neo4j.
+Each node and relationship target can optionally have a `source_transformation` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for property mappings.
 
 [source, json, role=nocollapse]
 ----
@@ -719,9 +710,9 @@ end::transformations[]
 tag::actions[]
 
 [#actions]
-== Pre/Post load actions
+== Actions
 
-The `actions` section contains commands that can be run before or after specific steps of the import process.
+The `actions` section contains commands that can be run before or after specific steps of the import process, called `stage`.
 You may for example submit HTTP requests when steps complete, execute SQL queries on the source, or run Cypher statements on the Neo4j target instance.
 
 .Actions specification skeleton
@@ -756,7 +747,7 @@ Further attributes depend on the action type.
 ----
 
 - `type` (string) -- The action type.
-- `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
+- `name` (string) --  A human-friendly name for the action (unique among all names).
 - `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
 - `method` (string) -- The HTTP method; either `get` or `post`.
 - `url` (string) -- The URL the HTTP request should target.
@@ -790,15 +781,15 @@ Further attributes depend on the action type.
   "name": "<actionName>",
   "stage": "<stageName>",
   "query": "<cypherQuery>",
-  "execution_mode": "<transaction/autocommit>"  //default?
+  "execution_mode": "<transaction/autocommit>"
 }
 ----
 
 - `type` (string) -- The action type.
-- `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
+- `name` (string) --  A human-friendly name for the action (unique among all names).
 - `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
 - `query` (string) -- The Cypher query to run.
-- `execution_mode` (string, optional) -- Under what mode the query should be executed. Valid values are `transaction`, `autocommit`.
+- `execution_mode` (string, optional) -- Under what mode the query should be executed. Valid values are `transaction`, `autocommit` (default: `transaction`).
 
 .Action example for creating an `importJob` node after import completes
 [source, json]
@@ -827,7 +818,7 @@ Further attributes depend on the action type.
 ----
 
 - `type` (string) -- The action type.
-- `name` (string) --  A human-friendly name for the action (unique among all names; no spaces allowed).
+- `name` (string) --  A human-friendly name for the action (unique among all names).
 - `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
 - `sql` (string) -- The SQL query to run.
 
