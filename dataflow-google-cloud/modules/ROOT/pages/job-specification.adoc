@@ -1,43 +1,51 @@
+:target_property_type-valid-values-extra:
+:page-toclevels: 3
+
 = Create a job specification file
 
 
 include::{common}:partial$job-specification.adoc[tags=intro]
 
 
+
+include::{common}:partial$job-specification.adoc[tags=full-example]
+
 [source, json]
 ----
-include::../examples/google-cloud-movies-jobspec.json[]
+include::example$google-cloud-movies-jobspec.json[]
 ----
+
 
 
 include::{common}:partial$job-specification.adoc[tags=configuration]
 
 
+[#sources]
 == Sources
 
 The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
 
-To import data from a CSV file, six attributes are compulsory.
+Source objects must at minimum specify the attributes `type`, `name`, `urls`, and `header`.
+The default column delimiter and line separator are set depending on the specified `format`, according to link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
 
+.Source object specification and its defaults
 [source, json]
 ----
 {
   "type": "text",
-  "name": "movies",
-  "uri": "<path-to-csv>",
-  "format": "EXCEL",
-  "delimiter": ",",
-  "ordered_field_names": "movieId,title"
+  "name": "<sourceName>",
+  "urls": [ "<csvPath1>", "<csvPath2>", ... ],
+  "format": "default",
+  "column_delimiter": "",
+  "line_separator": "",
+  "header": "<colName1>,<colName2>,..."
 }
 ----
 
 - `type` (string) -- `text`.
-- `name` (string) -- a human-friendly label for the source (unique among all sources). You will use this to reference the source in the targets section.
-- `uri` (string) -- the Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`).
-- `format` (string) -- any of link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`] predefined formats.
-- `delimiter` (string) -- CSV field delimiter.
-- `ordered_field_names` (string) -- list of field names the CSV file contains, in order.
-
+- `name` (string) -- A human-friendly label for the source (unique among all names). You will use this to reference the source from other parts of the specification file.
+- `urls` (list of strings) -- The Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`). +
++
 .How to retrieve the Google Storage location of a file?
 [%collapsible]
 ====
@@ -46,11 +54,56 @@ To retrieve the Google Storage location of a file in a Cloud bucket, expand the 
 [.shadow]
 image::image$google-cloud-file-url.png[width=600]
 ====
++
+- `format` (string) -- The format of the provided CSV file. +
+Valid values are: `default`, `excel`, `informix`, `mongo`, `mongo_tsv`, `mysql`, `oracle`, `postgres`, `postgresql_csv`, `rfc4180`. +
+Formats behave in accordance with link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
+- `column_delimiter` (string) -- CSV field delimiter.
+- `line_separator` (string) -- CSV line separator.
+- `header` (string) -- Full list of field names the CSV file contains, in order. Alternatively, the list may be restricted to only the first few columns. The column names specified here control the row field names the targets will map from.
 
-CSV files must fulfill some constraints:
+[NOTE]
+====
+The field `header` must specify all columns the CSV contains, or a contiguous subset of them starting from the first.
+**It is not possible to specify an arbitrary subset of columns.**
 
-- **they should not contain headers**. Column names should be specified in the `ordered_field_names` attributes, and files should contain data rows only.
-- they should not contain empty rows.
+.Valid/Invalid `header` examples given a CSV with columns `ID,name,title,rating`
+[%collapsible]
+=====
+[cols="1,5m"]
+|===
+|label:yes[Valid]
+|ID,name,title,rating
+
+|label:yes[Valid]
+|ID,name
+
+|label:yes[Valid]
+|ID,name,title
+
+|label:no[Invalid]
+|ID,rating
+
+|label:no[Invalid]
+|title,rating
+
+|===
+=====
+====
+
+[#source-full-example]
+=== Example
+.An example of a source object to import rows from a `persons.csv` file
+[source, json]
+----
+{
+  "type": "text",
+  "name": "persons",
+  "urls": "gs://neo4j-examples/persons.csv",
+  "format": "excel",
+  "header": "person_tmdbId,bio,born,bornIn,died,person_imdbId,name,person_poster,person_url"
+}
+----
 
 
 include::{common}:partial$job-specification.adoc[tags=targets]

@@ -1,8 +1,14 @@
+:target_property_type-valid-values-extra: Each property type (except byte_array) is also available in its "_array" form (i.e. date_array, string_array, etc) for BigQuery "repeated" column types.
+:page-toclevels: 3
+
 = Create a job specification file
 
 
 include::{common}:partial$job-specification.adoc[tags=intro]
 
+
+
+include::{common}:partial$job-specification.adoc[tags=full-example]
 
 [source, json]
 ----
@@ -10,33 +16,46 @@ include::example$bigquery-movies-jobspec.json[]
 ----
 
 
+
 include::{common}:partial$job-specification.adoc[tags=configuration]
 
 
+[#sources]
 == Sources
 
-The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will leverage the data surfaced by the sources and make it available to the targets, which eventually map it into Neo4j.
+The `sources` section contains the definitions of the data sources, as a list. As a rough guideline, you can think `+one table <=> one source+`. The importer will take the data surfaced by the sources and make it available to the targets, which will eventually map it into Neo4j.
 
-To import a BigQuery dataset, three attributes are compulsory.
-
+.Source object specification and its defaults
 [source, json]
 ----
 {
   "type": "bigquery",
-  "name": "movies",
-  "query": "SELECT movieId, title FROM team-connectors-dev.movies.movies"
+  "name": "<sourceName>",
+  "query": "<bigQuerySqlQuery>"
 }
 ----
 
 - `type` (string) -- `bigquery`.
-- `name` (string) -- a human-friendly label for the source (unique among all sources). You will use this to reference the source in the targets section.
-- `query` (string) -- the dataset to extract from BigQuery, as an SQL query. Notice that:
+- `name` (string) -- A human-friendly label for the source (unique among all names; may not contain spaces). You will use this to reference the source from other parts of the specification file.
+- `query` (string) -- The dataset to extract from BigQuery, as an SQL query. Notice that:
 
-  1. the source BigQuery table can have more columns than what you select in the query;
-  2. multiple targets can use the same source, even filtering it for a subset of columns.
+  1. the source table can have more columns than what you select in the query;
+  2. multiple targets can use the same source, potentially filtering it for a different subset of columns.
 
 [WARNING]
-    Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
+Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
+
+[#source-full-example]
+=== Example
+.An example of a source object to import rows from a `persons` table
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "persons",
+  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons"
+}
+----
 
 
 include::{common}:partial$job-specification.adoc[tags=targets]

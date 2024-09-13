@@ -1,6 +1,11 @@
 = Prerequisites
 
 
+// tag::intro[]
+This page gives you an overview of all the steps you need to follow before you can run a Dataflow job to import data into Neo4j.
+// end::intro[]
+
+
 // tag::neo4j[]
 == Neo4j instance
 
@@ -11,9 +16,22 @@ If you don't have an instance yet, you have two options:
 - sign-up for a free link:https://neo4j.com/cloud/aura-free/[AuraDB] instance
 - install and self-host Neo4j in a location that is publicly accessible (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
 
-Either way, you then need to create a file containing your database connection information in JSON format.
+[IMPORTANT]
+====
+The template uses link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints], some of which are only available in Neo4j/Aura Enterprise Edition installations.
+Although the Dataflow jobs are able to run **on Neo4j Community Edition instances, most constraints will not be created**.
+You have thus to ensure that the source data and job specification are prepared accordingly.
+====
+
+// end::neo4j[]
+
+
+// tag::connection-info[]
+== Upload connection information
+
+Regardless of how your Neo4j instance is deployed, you need to create a file containing your database connection information in JSON format.
 We will refer to this file as `neo4j-connection-info.json`.
-The file can be uploaded either as a secret to Google Cloud Secret Manager or directly into a Google Cloud Storage bucket.
+Dataflow will use the information contained in this file to connect to the Neo4j instance.
 
 [.tabbed-example]
 ====
@@ -98,43 +116,30 @@ To log into a server having a custom authentication scheme.
 =====
 ====
 
-[IMPORTANT]
-====
-The template uses link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints], some of which are only available in Neo4j/Aura Enterprise Edition installations.
-Although the Dataflow jobs are able to run **on Neo4j Community Edition instances, most constraints will not be created**.
-You have thus to ensure that the source data and job specification are prepared accordingly.
-====
+The connection file can be uploaded either as a secret to Google Cloud Secret Manager or directly into your Google Cloud Storage bucket:
 
-// end::neo4j[]
+1. link:https://console.cloud.google.com/security/secret-manager[*Google Secret Manager*] -- Create a new secret and upload the `neo4j-connection-info.json` file as value.
+2. link:https://console.cloud.google.com/storage/[*Google Cloud Storage*] -- Upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
+
+// end::connection-info[]
 
 
-// tag::secret[]
-== Google Secret Manager
-
-If you wish to store the credentials file as a Google secret, you need access to link:https://console.cloud.google.com/security/secret-manager[Google Secret Manager].
-
-Go ahead and create a new secret and upload the `neo4j-connection-info.json` file as value.
-// end::secret[]
-
-// tag::google-cloud-storage[]
+// tag::gcs-bucket[]
 == Google Cloud Storage bucket
 
 You need a link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket.
 This is the one and only location from where the Dataflow job can source files (both configuration files and source CSVs, if any).
-
-Unless you stored the credentials file in Google Secret Manager, go ahead and upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
-// end::google-cloud-storage[]
+// end::gcs-bucket[]
 
 
 // tag::dataflow-job[]
 == Google Dataflow job
 
 The link:https://console.cloud.google.com/dataflow[Google Dataflow] job glues all the pieces together and performs the data import.
-All the work that is now needed is to craft a _job specification_ file to provide Dataflow with all the information it needs to load the data into Neo4j.
+You need to craft a _job specification_ file to provide Dataflow with all the information it needs to load the data into Neo4j.
 
 [.shadow]
 image::{common}:image$google-dataflow.jpg[width=400]
-
 
 [NOTE]
 All Google-related resources (Cloud project, Cloud Storage buckets, Dataflow job) should either belong to the same account, or to one which the Dataflow job has permissions to access.

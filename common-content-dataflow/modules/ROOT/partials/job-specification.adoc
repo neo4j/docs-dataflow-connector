@@ -1,162 +1,390 @@
 = Create a job specification file
 
 tag::intro[]
-The job configuration file consists of a JSON object with four sections:
 
-- `config` -- global flags affecting how the import is performed
-- `sources` -- data source definitions (relational)
-- `targets` -- data target definitions (graph: nodes/relationships)
-- `actions` -- pre/post-load actions
+The job configuration file instructs Dataflow on how to run the import (where to source the data from, how to map it into Neo4j, etc).
+It consists of a JSON object with four sections.
 
 .Job specification JSON skeleton
 [source, JSON]
 ----
 {
-  "config": {},
-  "sources": [
+  "config": { ... },  // <1>
+  "sources": [  // <2>
     { ... }
   ],
-  "targets": [
+  "targets": [  // <3>
     { ... }
   ],
-  "actions": [
+  "actions": [  // <4>
     { ... }
   ]
 }
 ----
 
-At a high level, the job will fetch data from `sources` and transform/import them into the `targets`.
+<1> `config` -- Global flags affecting how the import is performed (optional)
+<2> `sources` -- Data source definitions (relational)
+<3> `targets` -- Data target definitions (graph: nodes/relationships/Cypher queries)
+<4> `actions` -- One-off actions (optional)
 
-Here below you can find an example job specification file that works out of the box to import the publicly-available `movies` dataset.
-In the next sections, we break it down and provide in-context information for each part. We recommend reading this guide side by side with the job specification example.
+At a high level, the job fetches data from `sources` and transforms/imports them into the `targets`.
+
 end::intro[]
 
 
+tag::full-example[]
+
+[#full-example]
+== A full example
+
+Here below is an example job specification file that works out of the box to import the publicly-available `movies` dataset.
+
+The dataset contains entities `Person` and `Movie`, linked together by `DIRECTED` and `ACTED_IN` relationships.
+In other words, each `Person` may have `DIRECTED` and/or `ACTED_IN` a `Movie`.
+Both entities and relationships have extra details attached to each of them.
+The data is sourced from the following files: xref:common-content-dataflow:ROOT:attachment$persons.csv[persons.csv], xref:common-content-dataflow:ROOT:attachment$movies.csv[movies.csv], xref:common-content-dataflow:ROOT:attachment$acted_in.csv[acted_in.csv], xref:common-content-dataflow:ROOT:attachment$directed.csv[directed.csv].
+
+[.shadow]
+image::{common}:image$movies-model.png[width=400]
+
+The next sections break it down and provide in-context information for each part.
+We recommend reading this guide side by side with the job specification example.
+
+end::full-example[]
+
+
 tag::configuration[]
+
+[#configuration]
 == Configuration
 
-The `config` object contains global configuration for the import job. The flags it supports are:
-
-- `reset_db` (bool) -- whether to clear the target database before importing.
-Deletes data, indexes, and constraints.
-- `index_all_properties` (bool) -- whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/[Cypher -> Indexes for search performance].
+The `config` object contains global configuration for the import job.
+All settings have a default, so you don't need to specify them unless you wish to alter them.
 
 .Configuration settings and their defaults
 [source, JSON]
 ----
 "config": {
   "reset_db": false,
-  "index_all_properties": false
+  "index_all_properties": false,
+  "node_target_batch_size": 5000,
+  "relationship_target_batch_size": 1000,
+  "query_target_batch_size": 1000,
+  "node_target_parallelism": 10,
+  "relationship_target_parallelism": 1,
+  "query_target_parallelism": 1
 }
 ----
+
+- `reset_db` (bool) -- Whether to clear the target database before importing.
+Deletes data, indexes, and constraints.
+- `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
+- `node_target_batch_size` (int) -- Number of nodes to be processed for each transaction.
+- `relationship_target_batch_size` (int) -- Number of relationships to be processed for each transaction.
+- `query_target_batch_size` (int) -- Number of rows to be processed for each custom query.
+- `node_target_parallelism` (int) -- Number of max concurrent transactions for node targets per worker.
+- `relationship_target_parallelism` (int) -- Number of max concurrent transactions for relationship targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
+- `query_target_parallelism` (int) -- Number of max concurrent transactions for Cypher query targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
+
 end::configuration[]
 
 
 tag::targets[]
+
+[#targets]
 == Targets
 
 The `targets` section contains the definitions of the graph entities that will result from the import.
+
 Neo4j represents objects with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-node[nodes] (ex. `movies`, `people`) and connects them with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship[relationships] (ex. `ACTED_IN`, `DIRECTED`).
-Each object in the targets section is keyed as either `node` or `edge` (synonym for _relationship_) and will generate a corresponding entity in Neo4j drawing data from a source.
-It is also possible to run custom Cypher queries via targets keyed as `custom_query`.
+Each object in the targets section will generate a corresponding entity (node or relationship) in Neo4j drawing data from a source.
+It is also possible to run custom Cypher queries.
 
-By default, you do not have to think about dependencies between nodes and relationships, as the job imports all `node` targets _before_ any `edge` target, and processes targets of type `custom_query` last.
-It is possible to alter this behavior and customize the ordering of targets.
+.Targets specification skeleton
+[source, JSON]
+----
+"targets": {
+  "nodes": [ ... ],
+  "relationships": [ ... ],
+  "queries": [ ... ]
+}
+----
+
+By default, **you don't need to think about dependencies between nodes and relationships**.
+Relationship targets are always processed after the targets corresponding to their start and end node.
+It is however possible to add other targets as dependencies.
 
 
+[#node-objects]
 === Node objects
 
-Compulsory attributes for `node` objects are `source`, `mappings.labels`, and `mappings.keys`.
+Node entities must be grouped in a list keyed `nodes` inside the `targets` object.
 
-[source, json, role=nocollapse]
+.Node targets specification skeleton
+[source, JSON]
+----
+"targets": {
+  "nodes": [
+    { <nodeSpec1> },
+    { <nodeSpec2> },
+    ...
+  ]
+}
+----
+
+
+[#node-compulsory-fields]
+==== Compulsory fields
+
+Each node object must at minimum have attributes `source`, `name`, `labels`, and `properties`.
+
+[source, json]
 ----
 {
-  "node": {
-    "source": "persons",
-    "name": "Person",
-    "mode": "merge",
-    "transform": {
-      "group": true
+  "source": "<sourceName>",
+  "name": "<targetName>",
+  "labels": ["<label1>", "<label2>", ...],
+  "properties": [
+    {
+      "source_field": "<bigQueryColumnName>",
+      "target_field": "<neo4jPropertyName>",
+      "target_property_type": "<neo4jPropertyType>"
     },
-    "mappings": {
-      "labels": [
-        "\"Person\""
-      ],
-      "properties": {
-        "keys": [
-          {"person_tmdbId": "id"}
-        ],
-        "mandatory": [],
-        "unique": [],
-        "indexed": [
-          {"name": "name"}
-        ],
-        "strings": [
-          {"person_tmdbId": "id"},
-          {"name": "name"},
-          {"bornIn": "born_in"}
-        ],
-        "dates": [
-          {"born": "born"},
-          {"died": "died"}
-        ]
+    { <propertyObj2> },
+    ...
+  ],
+}
+----
+
+- `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
+- `name` (string) -- A human-friendly name for the target (unique among all names).
+- `labels` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[Labels] to mark the nodes with.
+- `properties` (list of objects) -- Mapping between source columns and node properties. +
+Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
+{target_property_type-valid-values-extra}
+
+[#node-schema]
+==== Schema definition
+
+You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexes] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints] on the imported nodes through the `schema` object.
+The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each entity type.
+
+[TIP]
+If the global config `index_all_properties` is set to `true`, all properties will be indexed with range indexes.
+
+.Node target schema definition and their defaults
+[source, json]
+----
+{
+  ...
+  "schema": {
+    "enable_type_constraints": true,
+    "key_constraints": [
+      {
+        "name": "<constraintName>",
+        "label": "<label>",
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+        "options": {}
       }
-    }
+    ],
+    "unique_constraints": [
+      {
+        "name": "<constraintName>",
+        "label": "<label>",
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+        "options": {}
+      }
+    ],
+    "existence_constraints": [
+      {
+        "name": "<constraintName>",
+        "label": "<label>",
+        "property": "<neo4jPropertyName>"
+      }
+    ],
+    "range_indexes": [
+      {
+        "name": "<indexName>",
+        "label": "<label>",
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+      }
+    ],
+    "text_indexes": [
+      {
+        "name": "<indexName>",
+        "label": "<label>",
+        "property": "<neo4jPropertyName>",
+        "options": {}
+      }
+    ],
+    "point_indexes": [
+      {
+        "name": "<indexName>",
+        "label": "<label>",
+        "property": "<neo4jPropertyName>",
+        "options": {}
+      }
+    ],
+    "fulltext_indexes": [
+      {
+        "name": "<indexName>",
+        "labels": ["label1", "label2", ...],
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+        "options": {}
+      }
+    ],
+    "vector_indexes": [
+      {
+        "name": "<indexName>",
+        "label": "<label>",
+        "property": "<neo4jPropertyName>",
+        "options": {}
+      }
+    ]
   }
 }
 ----
 
-- `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- a human-friendly name for the target (unique among all targets).
-- `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[Cypher -> `MERGE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[Cypher -> `CREATE`] for info.
-- `mappings` (object) -- details on how the source columns should be mapped into node details.
-* `**labels**` (list of strings) -- link:https://medium.com/neo4j/graph-modeling-labels-71775ff7d121[labels] to mark the nodes with. Note that they should be quoted and escaped.
-* `properties` (object) -- mapping of source columns into node properties.
-** `**keys**` (list of objects) -- source columns that should be mapped into node properties _and_ get a node key constraint.
-** `mandatory` (list of objects) -- source columns that should be mapped into node properties _and_ get a node property existence constraint.
-** `unique` (list of objects) -- source columns that should be mapped into node properties _and_ get a unique node property constraint.
-** `indexed` (list of objects) -- source columns that should be mapped into node properties _and_ get an index on the corresponding node property.
-** `strings`, `floats`, `integers`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
-- `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `keys` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
-- `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
-- `execute_after_name` (string) -- the `name` of the target after which the current one should run.
+Where the attributes for each object are:
 
-[TIP]
-For more information on indexes and constraints in Neo4j, see link:https://neo4j.com/docs/cypher-manual/current/constraints/[Cypher -> Constraints] and link:https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/[Cypher -> Indexes for search performance].
+- `name` (string) -- The name of the index or constraint to be created in Neo4j.
+- `label` (string) or `labels` (list of strings) -- The label(s) on which the index or constraint should be enforced upon.
+- `property` (string) or `properties` (list of strings) -- The property(s) on which the index or constraint should be enforced upon.
+- `options` (object) -- The options with which the index or constraint should be created with (refer to the individual pages for each link:https://neo4j.com/docs/cypher-manual/current/indexes/[index] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraint] type). When present, it is optional, except for vector indexes where it is mandatory.
 
-The objects in `keys`, `mandatory`, `unique`, `indexed`, and all the type properties (`strings`, `floats`, etc) have the format
+[WARNING]
+**Source data must not have null values for `key_constraints` columns**, or they will clash with the node key constraint.
+If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
+Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
+[IMPORTANT]
+The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
+
+
+[#node-config]
+==== Configuration
+
+.Node target config options and their defaults
+[source, JSON]
+----
+{
+  ...
+  "active": true,
+  "write_mode": "merge",
+  "source_transformations": {
+    "enable_grouping": true
+  },
+  "depends_on": ["<dependencyTargetName1>", "<dependencyTargetName2>", ...]
+}
+----
+
+- `active` (bool) -- Whether the target should be included in the import (default: `true`).
+- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
+- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will append the SQL clause `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
+- `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
+
+
+[#node-example]
+==== Example
+
+.A node object example for import of `Person` nodes
 [source, json]
 ----
-{"<column-name-in-source>": "<wished-node-property-name>"}
-----
-
-For example, `{"person_tmbdId": "id"}` will map the source column `person_tmbdId` to the property `id` in the new nodes.
-
-Things to pay attention to:
-
-- **make sure to quote and escape labels**.
-- **names in `keys` should not also be listed in `unique` or `mandatory`**, or the constraints will conflict.
-- **source data must not have null values for `keys` columns**, or they will clash with the node key constraint. If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
-- if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
-- when a property list has multiple items, specify each property in a separate object within the list, and not as a single object containing them all.
-+
-[source, json]
-----
-// Good
-"dates": [
-  {"born": "born"},
-  {"died": "died"}
-]
-
-// Bad
-"dates": [
-  {
-    "born": "born",
-    "died": "died"
+{
+  "source": "persons",
+  "name": "Person",
+  "labels": [ "Person" ],
+  "properties": [
+    {
+      "source_field": "person_tmdbId",
+      "target_field": "id",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "name",
+      "target_field": "name",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "bornIn",
+      "target_field": "bornLocation",
+      "target_property_type": "string"
+    },
+    {
+      "source_field": "born",
+      "target_field": "bornDate",
+      "target_property_type": "local_date"
+    },
+    {
+      "source_field": "died",
+      "target_field": "diedDate",
+      "target_property_type": "local_date"
+    }
+  ],
+  "schema": {
+    "key_constraints": [
+      {
+        "name": "personIdKey",
+        "label": "Person",
+        "properties": ["id"]
+      }
+    ],
+    "unique_constraints": [
+      {
+        "name": "personNameUnique",
+        "label": "Person",
+        "properties": ["name"]
+      }
+    ]
   }
-]
+}
 ----
+
+'''
+
+
+[#relationship-objects]
+=== Relationship objects
+
+Relationship entities must be grouped in a list keyed `relationships` inside the `targets` object.
+
+.Relationship targets specification skeleton
+[source, JSON]
+----
+"targets": {
+  ...
+  "relationships": [
+    { <relationshipSpec1> },
+    { <relationshipSpec2> },
+    ...
+  ]
+}
+----
+
+
+[#relationship-compulsory-fields]
+==== Compulsory fields
+
+Each relationship object must at minimum have attributes `source`, `name`, and `type`.
+
+It must also contain information about which node targets the relationship links together. You provide this through `start_node_reference` and `end_node_reference`.
+
+[source, json]
+----
+{
+  "source": "<sourceName>",
+  "name": "<targetName>",
+  "type": "<relationshipType>",
+  "start_node_reference": "<nodeTargetName>",
+  "end_node_reference": "<nodeTargetName>"
+}
+----
+
+- `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
+- `name` (string) -- A human-friendly name for the target (unique among all names).
+- `type` (string) -- link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship-type[Type] to assign to the relationship.
+- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship.
+- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship.
 
 [IMPORTANT]
 ====
@@ -164,94 +392,248 @@ Things to pay attention to:
 ====
 
 
-=== Edge objects
+[#relationship-properties]
+==== Properties
 
-Compulsory attributes for `edge` objects are `source`, `mappings.type`, `mappings.source`, and `mappings.target`.
+Relationships may also map source columns as properties.
 
 [source, json, role=nocollapse]
 ----
 {
-  "edge": {
-    "source": "acted_in",
-    "name": "Acted_in",
-    "mode": "merge",
-    "mappings": {
-      "type": "\"ACTED_IN\"",
-      "source": {
-        "label": "\"Person\"",
-        "key": "person_tmdbId"
-      },
-      "target": {
-        "label": "\"Movie\"",
-        "key": "movieId"
-      },
-      "properties": {
-        "keys": [],
-        "mandatory": [],
-        "unique": [],
-        "indexed": [],
-        "strings": [
-          {"role": "role"}
-        ]
-      }
+  ...
+  "properties": [
+    {
+      "source_field": "<bigQueryColumnName>",
+      "target_field": "<neo4jPropertyName>",
+      "target_property_type": "<neo4jPropertyType>"
     },
-    "transform": {
-      "group": true
-    }
+    { <propertyObj2> },
+    ...
+  ]
+}
+----
+
+- `properties` (list of objects) -- Mapping between source columns and relationship properties. +
+Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
+{target_property_type-valid-values-extra}
+
+
+[#relationship-schema]
+==== Schema definition
+
+You may create link:https://neo4j.com/docs/cypher-manual/current/indexes/[indexes] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints] on the imported relationships through the `schema` object.
+The schema setup is equivalent to manually running the relevant `CREATE INDEX/CONSTRAINT` commands, except they are run automatically ahead of import for each relationship type.
+
+[TIP]
+If the global config `index_all_properties` is set to `true`, all properties will be indexed with range indexes.
+
+.Relationship target schema definition and their defaults
+[source, json]
+----
+{
+  ...
+  "schema": {
+    "enable_type_constraints": true,
+    "key_constraints": [
+      {
+        "name": "<constraintName>",
+        "type": "<relationshipType>",
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+        "options": {}
+      }
+    ],
+    "unique_constraints": [
+      {
+        "name": "<constraintName>",
+        "type": "<relationshipType>",
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+        "options": {}
+      }
+    ],
+    "existence_constraints": [
+      {
+        "name": "<constraintName>",
+        "type": "<relationshipType>",
+        "property": "<neo4jPropertyName>"
+      }
+    ],
+    "range_indexes": [
+      {
+        "name": "<indexName>",
+        "type": "<relationshipType>",
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+      }
+    ],
+    "text_indexes": [
+      {
+        "name": "<indexName>",
+        "type": "<relationshipType>",
+        "property": "<neo4jPropertyName>",
+        "options": {}
+      }
+    ],
+    "point_indexes": [
+      {
+        "name": "<indexName>",
+        "type": "<relationshipType>",
+        "property": "<neo4jPropertyName>",
+        "options": {}
+      }
+    ],
+    "fulltext_indexes": [
+      {
+        "name": "<indexName>",
+        "types": ["<relationshipType1>", "<relationshipType2>", ...],
+        "properties": ["<neo4jPropertyName1>", "<neo4jPropertyName2>", ...],
+        "options": {}
+      }
+    ],
+    "vector_indexes": [
+      {
+        "name": "<indexName>",
+        "type": "<relationshipType>",
+        "property": "<neo4jPropertyName>",
+        "options": {}
+      }
+    ]
   }
 }
 ----
 
-- `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects.
-- `name` (string) -- a human-friendly name for the target (unique among all targets).
-- `mode` (string) -- the creation mode in Neo4j. Either `merge` or `append` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[Cypher -> `MERGE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[Cypher -> `CREATE`] for info.
-- `mappings` (object) -- details on how the source columns should be mapped into node details.
-* `**type**` (string) -- type to assign to the relationship. Note that it should be quoted and escaped.
-* `**source**` (object) -- starting node for the relationship (identified by node label and key).
-* `**target**` (object) -- ending node for the relationship (identified by node label and key).
-* `properties` (object) -- mapping of source columns into relationship properties.
-** `keys` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship key constraint.
-** `mandatory` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship property existence constraint.
-** `unique` (list of objects) -- source columns that should be mapped into relationship properties _and_ get a relationship uniqueness constraint.
-** `indexed` (list of objects) -- source columns that should be mapped into relationship properties _and_ get an index on the corresponding relationship property.
-** `strings`, `floats`, `integers`, `dates`, `points`, `booleans` (list of objects) -- source columns to be mapped into node properties of the given type. The data type affects how the data is represented into Neo4j, but does not create type constraints.
-- `transform` (object) -- if `"group": true`, the import will SQL `GROUP BY` on all fields specified in `mappings.source`, `mappings.target`, and properties. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions, see xref:#_transformations[].
-- `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
-- `execute_after_name` (string) -- the `name` of the target after which the current one should run.
+Where the attributes for each object are:
 
-[TIP]
-For more information on indexes and constraints in Neo4j, see link:https://neo4j.com/docs/cypher-manual/current/constraints/[Cypher -> Constraints] and link:https://neo4j.com/docs/cypher-manual/current/indexes-for-search-performance/[Cypher -> Indexes for search performance].
+- `name` (string) -- The name of the index or constraint to be created in Neo4j.
+- `type` (string) -- The type on which the index or constraint should be enforced upon.
+- `property` (string) or `properties` (list of strings) -- The property(s) on which the index or constraint should be enforced upon.
+- `options` (object) -- The options with which the index or constraint should be created with (refer to the individual pages for each link:https://neo4j.com/docs/cypher-manual/current/indexes/[index] and link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraint] type). When present, it is optional, except for vector indexes where it is mandatory.
 
-The objects in `unique`, `indexed`, and all the type properties (`strings`, `floats`, etc) have the format
-
-[source, json]
-----
-{"<column-name-in-source>": "<wished-relationship-property-name>"}
-----
-
-For example, `{"role": "role"}` will map the source column `role` to the property `role` in the new relationships.
-
-Things to pay attention to:
-
-- **make sure to quote and escape relationship types and node labels**.
-- **`source.key` and `target.key` take names from the source columns, not from the mapped graph properties**.
-In the snippet above, notice how the key names are `person_tmdbId` and `movieId` even if the mapped property names in the related node objects are `person_id` and `movie_id`.
-- if `index_all_properties: true` in config, it is pointless to specify any columns in `properties.indexed`.
-- when a property list has multiple items, specify each property in a separate object within the list, and not as a single object containing them all.
+[WARNING]
+**Source data must not have null values for `key_constraints` columns**, or they will clash with the relationship key constraint.
+If the source is not clean in this respect, think of cleaning it upfront in the related `source.query` field by excluding all rows that wouldn't fulfill the constraints (ex. `WHERE person_tmbdId IS NOT NULL`).
+Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
 [IMPORTANT]
-====
-`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
-====
+The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
-=== Custom queries
+[#relationship-config]
+==== Configuration
 
-Custom query targets are useful when the import requires a complex query that does not easily fit into the node/edge targets format.
+.Relationship target config options and their defaults
+[source, JSON]
+----
+{
+  ...
+  "active": true,
+  "node_match_mode": "merge",
+  "write_mode": "merge",
+  "source_transformations": {
+    "enable_grouping": true
+  },
+  "depends_on": ["<dependencyTargetName1>", "<dependencyTargetName2>", ...]
+}
+----
 
-Compulsory attributes for `custom_query` objects are `source` and `query`.
+- `active` (bool) -- Whether the target should be included in the import.
+- `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `create`, `match`, or `merge` (default), respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`], link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`], and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
+- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
+- `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
+- `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
+
+
+[#relationship-example]
+==== Example
+
+.A relationship object example for import of `ACTED_IN` relationships
+[source, json]
+----
+{
+  "source": "acted_in",
+  "name": "Acted_in",
+  "type": "ACTED_IN",
+  "start_node_reference": "Persons",
+  "end_node_reference": "Movies",
+  "properties": [
+    {
+      "source_field": "role",
+      "target_field": "role",
+      "target_property_type": "string"
+    }
+  ]
+}
+----
+
+'''
+
+
+[#query-targets]
+=== Custom query targets
+
+Custom query targets are useful when the import requires a complex query that does not easily fit into the node/relationship targets format.
+Query targets receive batches of rows through the variable `$rows`.
+
+Custom queries must be grouped in a list keyed `queries` inside the `targets` object.
+
+.Query targets specification skeleton
+[source, JSON]
+----
+"targets": {
+  ...
+  "queries": [
+    { <querySpec1> },
+    { <querySpec2> },
+    ...
+  ]
+}
+----
+
+[WARNING]
+Do not use custom queries to run Cypher that does not directly depend on a source; use xref:actions[actions] instead.
+One-off queries, especially if not idempotent, are not fit to use in custom query targets.
+The reason for this is that queries from targets are run in batches, so a custom query may be run several times depending on the number of `$rows` batches extracted from the source.
+
+
+[#query-compulsory-fields]
+==== Compulsory fields
+
+Each query target must at minimum have attributes `source`, `name`, and `query`.
 
 [source, json]
+----
+{
+  "source": "<sourceName>",
+  "name": "<targetName>",
+  "query": "<cypherQuery>"
+}
+----
+
+- `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
+- `name` (string) -- A human-friendly name for the target (unique among all names).
+- `query` (string) -- A Cypher query. Data from the source is available as a list in the parameter `$rows`.
+
+
+[#query-config]
+==== Configuration
+
+.Query target config options and their defaults
+[source, JSON]
+----
+{
+  ...
+  "active": true,
+  "depends_on": ["<dependencyTargetName1>", "<dependencyTargetName2>", ...]
+}
+----
+
+- `active` (bool) -- Whether the target should be included in the import.
+- `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
+
+
+[#query-example]
+==== Example
+
+.A query object example for import of `Person` nodes and setting a date on creation
+[source, JSON]
 ----
 {
   "custom_query": {
@@ -262,102 +644,211 @@ Compulsory attributes for `custom_query` objects are `source` and `query`.
 }
 ----
 
-- `**source**` (string) -- the name of the source this target should draw data from. Should match one of the names from the `sources` objects. The rows extracted from the source are passed as a list query parameter to `query`.
-- `name` (string) -- a human-friendly name for the target (unique among all targets).
-- `**query**` (string) -- a Cypher query. Data from the source is available as a list in the parameter `$rows`.
-- `execute_after` (string) -- target object after which the current target should run. Either `node`, `edge`, or `custom_query`. To be used in conjunction with `execute_after_name`.
-- `execute_after_name` (string) -- the name of the target after which the current one should run.
-
-[WARNING]
-Do not use custom queries to run Cypher that does not directly depend on a source; use xref:_prepost_load_actions[actions] instead.
-One-off queries, especially if not idempotent, are not fit to use in custom query targets.
-The reason for this is that queries from targets are run in batches, so a custom query may be run several times depending on the number of `$rows` batches extracted from the source.
-
 end::targets[]
 
 
 tag::transformations[]
-== Transformations
 
-Each target can optionally have a `transform` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for import into Neo4j.
+[#source-transformations]
+== Source transformations
 
-The following example shows how the aggregations would work on a fictitious dataset (not the movies one).
+Each node and relationship target can optionally have a `source_transformation` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for property mappings.
 
-[source, json]
+[source, json, role=nocollapse]
 ----
-"transform": {
-  "group": true,
-  "aggregations": [
-    {
-      "expr": "SUM(unit_price*quantity)",
-      "field": "total_amount_sold"
-    },
-    {
-      "expr": "SUM(quantity)",
-      "field": "total_quantity_sold"
-    }
+"source_transformations": {
+  "enable_grouping": true,
+  "aggregations": [ {
+    "expression": "",
+    "field_name": ""
+   },
+   { aggregationObj2 }, ...
   ],
-  "limit": 50,
-  "where": "person_tmbdId IS NOT NULL"
+  "limit": -1,
+  "where": "",
+  "order_by": [
+    {
+      "expression": "",
+      "order": "<asc/desc>"
+    },
+    { orderObj2 }, ...
+  ],
 }
 ----
 
-- `group` (bool) -- must be `true` for `aggregations`/`where` to work.
-- `aggregations` (list of objects) -- aggregation functions are specified as SQL queries in the `expr` attribute, and the result is available under the name specified in `field`.
-- `limit` (int) -- caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
-- `where` (string) -- filters out source data prior to import (with an SQL `WHERE` clause format).
+- `enable_grouping` (bool) -- Must be `true` for `aggregations`/`where` to work. ?
+- `aggregations` (list of objects) -- Aggregations are specified as SQL queries in the `expression` attribute, and the result is available as a source column under the name specified in `field_name`.
+- `limit` (int) -- Caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
+- `where` (string) -- Filters out source data prior to import (with an SQL `WHERE` clause format).
+- `order_by` (list of objects) -- Enforces ordering on the source. What shape should expression have?
+
+[#transformation-example]
+=== Example
+.A transformation object example on a fictitious data set
+[source, json]
+----
+{
+  "enable_grouping": true,
+  "aggregations": [
+    {
+      "expression": "SUM(unit_price*quantity)",
+      "field_name": "total_amount_sold"
+    },
+    {
+      "expression": "SUM(quantity)",
+      "field_name": "total_quantity_sold"
+    }
+  ],
+  "limit": 50,
+  "where": "sourceId IS NOT NULL"
+}
+----
+
 end::transformations[]
 
 
 tag::actions[]
-== Pre/Post load actions
 
-The `actions` section contains commands that can be run before or after specific steps of the import process. You may for example submit HTTP requests when steps complete, or execute SQL queries on the source, or Cypher statements on the Neo4j target.
+[#actions]
+== Actions
+
+The `actions` section contains commands that can be run before or after specific steps of the import process.
+Each step is called a `stage`.
+You may for example submit HTTP requests when steps complete, execute SQL queries on the source, or run Cypher statements on the Neo4j target instance.
+
+.Actions specification skeleton
+[source, JSON]
+----
+  ...
+  "actions": [
+    { <actionSpec1> },
+    { <actionSpec2> },
+    ...
+  ]
+----
+
+Each action object must at minimum have the attribute `name`, `type`, and `stage`.
+Further attributes depend on the action type.
+
+[.tabbed-example]
+====
+[.include-with-HTTP-action]
+=====
 
 [source, json]
 ----
 {
-  "name": "Post load POST request",
-  "execute_after": "edge",
-  "execute_after_name": "Acted_in",
-  "type": "http_post",
-  "options": [
-    {"url": "https://httpbin.org/post"},
-    {"param1": "value1"}
-  ],
-  "headers": [
-    {"header1": "value1"},
-    {"header2": "value2"}
-  ]
+  "type": "http",
+  "name": "<actionName>",
+  "stage": "<stageName>",
+  "method": "<get/post>",
+  "url": "<targetUrl>",
+  "headers": {}
 }
 ----
 
-- `name` (string) -- a human friendly name for the action.
-- `execute_after` (string) -- after what import step the action should run. Valid values are:
-* `preloads` -- before any source is parsed
-* `sources` -- after sources have been parsed
-* `nodes` -- after all `node` objects have been processed
-* `edges` -- after all `edge` objects have been processed
-* `custom_queries` -- after all `custom_query` objects have been processed
-* `loads` -- after all entities (nodes+edges) have been processed
-* `source`, `node`, `edge`, `custom_queries`, `action` -- after a specific source or node or edge or custom query or action object has been run, to be used in conjunction with `execute_after_name`
-- `execute_after_name` (string) -- after which `source`/`node`/`edge`/`custom_query`/`action` object the step should run.
-- `type` (string) -- what action to run. Valid values are:
-* `http_post` -- HTTP POST request (requires a `url` option)
-* `http_get` -- HTTP GET request  (requires a `url` option)
-* `bigquery` -- query to a BigQuery database (requires an `sql` option)
-* `cypher` -- query to the target Neo4j database (requires a `cypher` option)
-- `options` (list of objects) -- action options, such as `url`, `sql`, `cypher`.
-- `headers` (list of objects) -- headers to send with the request.
+- `type` (string) -- The action type.
+- `name` (string) --  A human-friendly name for the action (unique among all names).
+- `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
+- `method` (string) -- The HTTP method; either `get` or `post`.
+- `url` (string) -- The URL the HTTP request should target.
+- `headers` (object, optional) -- Request headers.
+
+.Action example for sending a `GET` request after import completes
+[source, json]
+----
+{
+  "type": "http",
+  "name": "Post load ping",
+  "stage": "end",
+  "method": "get",
+  "url": "https://neo4j.com/success",
+  "headers": {
+    "secret": "314159",
+    "moreSecret": "17320"
+  }
+}
+----
+
+=====
+
+[.include-with-Cypher-action]
+=====
+
+[source, json]
+----
+{
+  "type": "cypher",
+  "name": "<actionName>",
+  "stage": "<stageName>",
+  "query": "<cypherQuery>",
+  "execution_mode": "<transaction/autocommit>"
+}
+----
+
+- `type` (string) -- The action type.
+- `name` (string) --  A human-friendly name for the action (unique among all names).
+- `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
+- `query` (string) -- The Cypher query to run.
+- `execution_mode` (string, optional) -- Under what mode the query should be executed. Valid values are `transaction`, `autocommit` (default: `transaction`).
+
+.Action example for creating an `importJob` node after import completes
+[source, json]
+----
+{
+  "type": "cypher",
+  "name": "Post load log",
+  "stage": "end",
+  "query": "MERGE (:importJob {date: datetime()})"
+}
+----
+
+=====
+
+[.include-with-BigQuery-action]
+=====
+
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "<actionName>",
+  "stage": "<stageName>",
+  "sql": "<sqlQuery>"
+}
+----
+
+- `type` (string) -- The action type.
+- `name` (string) --  A human-friendly name for the action (unique among all names).
+- `stage` (string) -- At what point of the import the action should run. Valid values are: `start`, `post_sources`, `pre_nodes`, `post_nodes`, `pre_relationships`, `post_relationships`, `pre_queries`, `post_queries`, `end`.
+- `sql` (string) -- The SQL query to run.
+
+.Action example for sending a `GET` request after import completes
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "Post load log",
+  "stage": "end",
+  "sql": "INSERT INTO logs.imports (time) VALUES (NOW())"
+}
+----
+
+=====
+
+====
+
 end::actions[]
 
 
 tag::variables[]
+
+[#variables]
 == Variables
 
-For production use cases it is common to supply date ranges or parameters based on dimensions, tenants, or tokens.
-Key-values can be supplied to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers.
+Key-values can be supplied in Dataflow to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers (?).
 You can provide parameters in the `Options JSON` field when creating the Dataflow job, as a JSON object.
 
-Variables must be escaped with the `$` symbol (ex. `$limit`). Replaceable tokens can appear in job specification files and in `readQuery` or `inputFilePattern` (source URI) command-line parameters.
+Variables must be prefixed by the `$` symbol (ex. `$limit`), and may be used in job specification files and in `readQuery` or `inputFilePattern` (source URI) xref:cli.adoc[command-line] parameters.
+
 end::variables[]
