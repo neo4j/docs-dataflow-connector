@@ -54,3 +54,4 @@ asciidoc:
     cross-mark: icon:times[]
     neo4j-base-uri: https://neo4j.com
     neo4j-docs-base-uri: https://neo4j.com/docs
+    common: 1@common-content-dataflow:ROOT@
