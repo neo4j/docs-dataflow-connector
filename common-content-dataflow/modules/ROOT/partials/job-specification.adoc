@@ -110,7 +110,7 @@ It is also possible to run custom Cypher queries.
 }
 ----
 
-By default, **you do not have to think about dependencies between nodes and relationships**.
+By default, **you don't need to think about dependencies between nodes and relationships**.
 Relationship targets are always processed after the targets corresponding to their start and end node.
 It is however possible to add other targets as dependencies.
 
@@ -712,7 +712,8 @@ tag::actions[]
 [#actions]
 == Actions
 
-The `actions` section contains commands that can be run before or after specific steps of the import process, called `stage`.
+The `actions` section contains commands that can be run before or after specific steps of the import process.
+Each step is called a `stage`.
 You may for example submit HTTP requests when steps complete, execute SQL queries on the source, or run Cypher statements on the Neo4j target instance.
 
 .Actions specification skeleton
