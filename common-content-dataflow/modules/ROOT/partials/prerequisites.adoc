@@ -2,7 +2,7 @@
 
 
 // tag::intro[]
-This page gives you an overview of all the pieces you need before you can run a Dataflow job to import data into Neo4j.
+This page gives you an overview of all the steps you need to follow before you can run a Dataflow job to import data into Neo4j.
 // end::intro[]
 
 

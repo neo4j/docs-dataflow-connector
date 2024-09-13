@@ -72,9 +72,6 @@
               "properties": ["name"]
             }
           ]
-        },
-        "transform": {  // needed?
-          "group": true
         }
       },
       {
@@ -118,9 +115,6 @@
               "properties": ["title"]
             }
           ]
-        },
-        "transform": {  // needed?
-          "group": true
         }
       }
     ],
@@ -130,12 +124,7 @@
         "name": "Directed",
         "type": "DIRECTED",
         "start_node_reference": "Persons",
-        "end_node_reference": "Movies",
-        "properties": [ ],
-        "schema": { },
-        "transform": {  // needed?
-          "group": true
-        }
+        "end_node_reference": "Movies"
       },
       {
         "source": "acted_in",
@@ -149,11 +138,7 @@
             "target_field": "role",
             "target_property_type": "string"
           }
-        ],
-        "schema": { },
-        "transform": {  // needed?
-          "group": true
-        }
+        ]
       }
     ]
   }

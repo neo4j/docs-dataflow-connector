@@ -43,7 +43,7 @@ The default column delimiter and line separator are set depending on the specifi
 ----
 
 - `type` (string) -- `text`.
-- `name` (string) -- A human-friendly label for the source (unique among all names; no spaces allowed). You will use this to reference the source from other parts of the specification file.
+- `name` (string) -- A human-friendly label for the source (unique among all names). You will use this to reference the source from other parts of the specification file.
 - `urls` (list of strings) -- The Google Storage location of the CSV file (ex. `gs://neo4j-datasets/movies.csv`). +
 +
 .How to retrieve the Google Storage location of a file?
@@ -60,7 +60,7 @@ Valid values are: `default`, `excel`, `informix`, `mongo`, `mongo_tsv`, `mysql`,
 Formats behave in accordance with link:https://commons.apache.org/proper/commons-csv/apidocs/org/apache/commons/csv/CSVFormat.html[Apache's `CSVFormat`].
 - `column_delimiter` (string) -- CSV field delimiter.
 - `line_separator` (string) -- CSV line separator.
-- `header` (string) -- Full list of field names the CSV file contains, in order. Alternatively, the list may be restricted to only the first few columns. The column names specified here control the row field names the targets will receive.
+- `header` (string) -- Full list of field names the CSV file contains, in order. Alternatively, the list may be restricted to only the first few columns. The column names specified here control the row field names the targets will map from.
 
 [NOTE]
 ====
@@ -83,6 +83,9 @@ The field `header` must specify all columns the CSV contains, or a contiguous su
 
 |label:no[Invalid]
 |ID,rating
+
+|label:no[Invalid]
+|title,rating
 
 |===
 =====
