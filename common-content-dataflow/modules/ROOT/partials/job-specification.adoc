@@ -668,7 +668,7 @@ Each node and relationship target can optionally have a `source_transformation` 
   "where": "",
   "order_by": [
     {
-      "expression": "",
+      "expression": "column_name",
       "order": "<asc/desc>"
     },
     { orderObj2 }, ...
@@ -676,11 +676,11 @@ Each node and relationship target can optionally have a `source_transformation` 
 }
 ----
 
-- `enable_grouping` (bool) -- Must be `true` for `aggregations`/`where` to work. ?
+- `enable_grouping` (bool) -- Must be `true` for `aggregations`/`where` to work.
 - `aggregations` (list of objects) -- Aggregations are specified as SQL queries in the `expression` attribute, and the result is available as a source column under the name specified in `field_name`.
 - `limit` (int) -- Caps the number of source rows that are considered for import (defaults to no limit, encoded as `-1`).
 - `where` (string) -- Filters out source data prior to import (with an SQL `WHERE` clause format).
-- `order_by` (list of objects) -- Enforces ordering on the source. What shape should expression have?
+- `order_by` (list of objects) -- Enforces ordering on the source.
 
 [#transformation-example]
 === Example
@@ -846,8 +846,16 @@ tag::variables[]
 [#variables]
 == Variables
 
-Key-values can be supplied in Dataflow to replace `$` delimited tokens in SQL queries, URLs, custom queries, or action options/headers (?).
+Key-values can be supplied in Dataflow to replace `$` delimited tokens.
 You can provide parameters in the `Options JSON` field when creating the Dataflow job, as a JSON object.
+Variable interpolation works in:
+
+- BigQuery source query (SQL)
+- Text source URL
+- Custom Cypher target query
+- BigQuery action SQL
+- Cypher action query
+- HTTP GET/POST URL and header values.
 
 Variables must be prefixed by the `$` symbol (ex. `$limit`), and may be used in job specification files and in `readQuery` or `inputFilePattern` (source URI) xref:cli.adoc[command-line] parameters.
 
