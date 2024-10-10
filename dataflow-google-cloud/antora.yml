@@ -5,3 +5,6 @@ version: 0.1
 start_page: ROOT:index.adoc
 nav:
 - modules/ROOT/content-nav.adoc
+asciidoc:
+    attributes:
+        common: 0.1@common-content-dataflow:ROOT@
