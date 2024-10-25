@@ -8,28 +8,28 @@
       "type": "text",
       "name": "persons",
       "urls": "gs://neo4j-examples/persons.csv",
-      "format": "excel",
+      "format": "default",
       "header": "person_tmdbId,bio,born,bornIn,died,person_imdbId,name,person_poster,person_url"
     },
     {
       "type": "text",
       "name": "movies",
       "urls": "gs://neo4j-examples/movies.csv",
-      "format": "excel",
+      "format": "default",
       "header": "movieId,title,budget,countries,movie_imdbId,imdbRating,imdbVotes,languages,plot,movie_poster,released,revenue,runtime,movie_tmdbId,movie_url,year,genres"
     },
     {
       "type": "text",
       "name": "directed",
       "urls": "gs://neo4j-examples/directed.csv",
-      "format": "excel",
+      "format": "default",
       "header": "movieId,person_tmdbId"
     },
     {
       "type": "text",
       "name": "acted_in",
       "urls": "gs://neo4j-examples/acted_in.csv",
-      "format": "excel",
+      "format": "default",
       "header": "movieId,person_tmdbId,role"
     }
   ],
@@ -37,7 +37,8 @@
     "nodes": [
       {
         "source": "persons",
-        "name": "Person",
+        "name": "Persons",
+        "write_mode": "merge",
         "labels": [ "Person" ],
         "properties": [
           {
@@ -58,12 +59,12 @@
           {
             "source_field": "born",
             "target_property": "bornDate",
-            "target_property_type": "local_date"
+            "target_property_type": "date"
           },
           {
             "source_field": "died",
             "target_property": "diedDate",
-            "target_property_type": "local_date"
+            "target_property_type": "date"
           }
         ],
         "schema": {
@@ -86,6 +87,7 @@
       {
         "source": "movies",
         "name": "Movies",
+        "write_mode": "merge",
         "labels": [ "Movie" ],
         "properties": [
           {
@@ -132,6 +134,7 @@
         "source": "directed",
         "name": "Directed",
         "type": "DIRECTED",
+        "write_mode": "merge",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies"
       },
@@ -139,6 +142,7 @@
         "source": "acted_in",
         "name": "Acted_in",
         "type": "ACTED_IN",
+        "write_mode": "merge",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies",
         "properties": [

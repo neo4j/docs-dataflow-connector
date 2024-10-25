@@ -29,7 +29,8 @@
     "nodes": [
       {
         "source": "persons",
-        "name": "Person",
+        "name": "Persons",
+        "write_mode": "merge",
         "labels": [ "Person" ],
         "properties": [
           {
@@ -50,12 +51,12 @@
           {
             "source_field": "born",
             "target_property": "bornDate",
-            "target_property_type": "local_date"
+            "target_property_type": "date"
           },
           {
             "source_field": "died",
             "target_property": "diedDate",
-            "target_property_type": "local_date"
+            "target_property_type": "date"
           }
         ],
         "schema": {
@@ -78,6 +79,7 @@
       {
         "source": "movies",
         "name": "Movies",
+        "write_mode": "merge",
         "labels": [ "Movie" ],
         "properties": [
           {
@@ -123,6 +125,7 @@
       {
         "source": "directed",
         "name": "Directed",
+        "write_mode": "merge",
         "type": "DIRECTED",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies"
@@ -130,6 +133,7 @@
       {
         "source": "acted_in",
         "name": "Acted_in",
+        "write_mode": "merge",
         "type": "ACTED_IN",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies",

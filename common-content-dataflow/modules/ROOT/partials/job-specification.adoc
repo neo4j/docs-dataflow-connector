@@ -292,7 +292,7 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 ----
 {
   "source": "persons",
-  "name": "Person",
+  "name": "Persons",
   "labels": [ "Person" ],
   "properties": [
     {
