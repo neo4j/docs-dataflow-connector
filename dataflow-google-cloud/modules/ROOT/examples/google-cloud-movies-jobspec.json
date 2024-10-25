@@ -7,30 +7,30 @@
     {
       "type": "text",
       "name": "persons",
-      "urls": "gs://neo4j-examples/persons.csv",
-      "format": "default",
-      "header": "person_tmdbId,bio,born,bornIn,died,person_imdbId,name,person_poster,person_url"
+      "urls": ["gs://neo4j-examples/persons.csv"],
+      "format": "excel",
+      "header": ["person_tmdbId","bio","born","bornIn","died","person_imdbId","name","person_poster","person_url"]
     },
     {
       "type": "text",
       "name": "movies",
-      "urls": "gs://neo4j-examples/movies.csv",
-      "format": "default",
-      "header": "movieId,title,budget,countries,movie_imdbId,imdbRating,imdbVotes,languages,plot,movie_poster,released,revenue,runtime,movie_tmdbId,movie_url,year,genres"
+      "urls": ["gs://neo4j-examples/movies.csv"],
+      "format": "excel",
+      "header": ["movieId","title","budget","countries","movie_imdbId","imdbRating","imdbVotes","languages","plot","movie_poster","released","revenue","runtime","movie_tmdbId","movie_url","year","genres"]
     },
     {
       "type": "text",
       "name": "directed",
-      "urls": "gs://neo4j-examples/directed.csv",
-      "format": "default",
-      "header": "movieId,person_tmdbId"
+      "urls": ["gs://neo4j-examples/directed.csv"],
+      "format": "excel",
+      "header": ["movieId","person_tmdbId"]
     },
     {
       "type": "text",
       "name": "acted_in",
-      "urls": "gs://neo4j-examples/acted_in.csv",
-      "format": "default",
-      "header": "movieId,person_tmdbId,role"
+      "urls": ["gs://neo4j-examples/acted_in.csv"],
+      "format": "excel",
+      "header": ["movieId","person_tmdbId","role"]
     }
   ],
   "targets": {
