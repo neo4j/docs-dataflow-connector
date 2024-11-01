@@ -30,7 +30,7 @@
       {
         "source": "persons",
         "name": "Persons",
-        "write_mode": "merge",
+        "write_mode": "append",
         "labels": [ "Person" ],
         "properties": [
           {
@@ -79,7 +79,7 @@
       {
         "source": "movies",
         "name": "Movies",
-        "write_mode": "merge",
+        "write_mode": "append",
         "labels": [ "Movie" ],
         "properties": [
           {
@@ -125,7 +125,8 @@
       {
         "source": "directed",
         "name": "Directed",
-        "write_mode": "merge",
+        "write_mode": "append",
+        "node_match_mode": "match",
         "type": "DIRECTED",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies"
@@ -133,7 +134,8 @@
       {
         "source": "acted_in",
         "name": "Acted_in",
-        "write_mode": "merge",
+        "write_mode": "append",
+        "node_match_mode": "match",
         "type": "ACTED_IN",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies",
