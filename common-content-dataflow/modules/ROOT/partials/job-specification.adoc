@@ -153,7 +153,7 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
     { <propertyObj2> },
     ...
   ],
-  "write_mode": "append"
+  "write_mode": "merge"
 }
 ----
 
@@ -163,7 +163,7 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
 - `properties` (list of objects) -- Mapping between source columns and node properties. +
 Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
 {target_property_type-valid-values-extra}
-- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `append`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
+- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
 
 
 [#node-schema]
@@ -379,7 +379,7 @@ It must also contain information about which node targets the relationship links
   "start_node_reference": "<nodeTargetName>",
   "end_node_reference": "<nodeTargetName>",
   "node_match_mode": "<match/merge>",
-  "write_mode": "<create/append>"
+  "write_mode": "<create/merge>"
 }
 ----
 
@@ -389,7 +389,7 @@ It must also contain information about which node targets the relationship links
 - `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship.
 - `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship.
 - `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `match` or `merge`, respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
-- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `append`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
+- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
 
 [IMPORTANT]
 ====
