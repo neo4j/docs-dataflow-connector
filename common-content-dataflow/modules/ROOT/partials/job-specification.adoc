@@ -153,6 +153,7 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
     { <propertyObj2> },
     ...
   ],
+  "write_mode": "merge"
 }
 ----
 
@@ -162,6 +163,8 @@ Each node object must at minimum have attributes `source`, `name`, `labels`, and
 - `properties` (list of objects) -- Mapping between source columns and node properties. +
 Valid values for `target_property_type` are: `boolean`, `byte_array` (assumes base64 encoding), `date`, `duration`, `float`, `integer`, `local_date`, `local_datetime`, `local_time`, `point`, `string`, `zoned_datetime`, `zoned_time`.
 {target_property_type-valid-values-extra}
+- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
+
 
 [#node-schema]
 ==== Schema definition
@@ -270,7 +273,6 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 {
   ...
   "active": true,
-  "write_mode": "merge",
   "source_transformations": {
     "enable_grouping": true
   },
@@ -279,7 +281,6 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 ----
 
 - `active` (bool) -- Whether the target should be included in the import (default: `true`).
-- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
 - `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will append the SQL clause `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
@@ -376,7 +377,9 @@ It must also contain information about which node targets the relationship links
   "name": "<targetName>",
   "type": "<relationshipType>",
   "start_node_reference": "<nodeTargetName>",
-  "end_node_reference": "<nodeTargetName>"
+  "end_node_reference": "<nodeTargetName>",
+  "node_match_mode": "<match/merge>",
+  "write_mode": "<create/merge>"
 }
 ----
 
@@ -385,6 +388,8 @@ It must also contain information about which node targets the relationship links
 - `type` (string) -- link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship-type[Type] to assign to the relationship.
 - `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship.
 - `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship.
+- `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `match` or `merge`, respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
+- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
 
 [IMPORTANT]
 ====
@@ -525,8 +530,6 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 {
   ...
   "active": true,
-  "node_match_mode": "merge",
-  "write_mode": "merge",
   "source_transformations": {
     "enable_grouping": true
   },
@@ -535,8 +538,6 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
 ----
 
 - `active` (bool) -- Whether the target should be included in the import.
-- `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `create`, `match`, or `merge` (default), respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`], link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`], and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
-- `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge` (default). See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
 - `source_transformations` (object) -- If `enable_grouping` is set to `true`, the import will SQL `GROUP BY` on all fields specified in `key_constraints` and `properties`. If set to `false`, any duplicate data in the source will be pushed into Neo4j, potentially raising constraints errors or making insertion less efficient. The object can also contain aggregation functions and further fields, see xref:source-transformations[].
 - `depends_on` (list of strings) -- The `name` of the target(s) that should execute _before_ the current one.
 
@@ -551,6 +552,8 @@ The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterp
   "source": "acted_in",
   "name": "Acted_in",
   "type": "ACTED_IN",
+  "write_mode": "merge",
+  "node_match_mode": "match",
   "start_node_reference": "Persons",
   "end_node_reference": "Movies",
   "properties": [

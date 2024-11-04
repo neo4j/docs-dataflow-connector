@@ -135,6 +135,7 @@
         "name": "Directed",
         "type": "DIRECTED",
         "write_mode": "merge",
+        "node_match_mode": "match",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies"
       },
@@ -143,6 +144,7 @@
         "name": "Acted_in",
         "type": "ACTED_IN",
         "write_mode": "merge",
+        "node_match_mode": "match",
         "start_node_reference": "Persons",
         "end_node_reference": "Movies",
         "properties": [
