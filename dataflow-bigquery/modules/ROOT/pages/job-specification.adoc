@@ -44,9 +44,9 @@ The `sources` section contains the definitions of the data sources, as a list. A
   1. the source table can have more columns than what you select in the query;
   2. multiple targets can use the same source, potentially filtering it for a different subset of columns.
 
-- `query_temp_project` (string, optional) Specifies the project to use for temporary data processing by Apache Beam. If not set, Apache
+- `query_temp_project` (string, optional) Specifies the project to store temporary query results, processed by Apache Beam. If not set, Apache
  Beam will use the current project.
-- `query_temp_dataset` (string, optional) Specifies the dataset to use for temporary data processing by Apache Beam. If not set, Apache Beam will create its own datasets for processing.
+- `query_temp_dataset` (string, optional) Specifies the dataset to store temporary query results, processed by Apache Beam. If not set, Apache Beam will create its own datasets for processing.
 
 [IMPORTANT]
 If you set query_temp_project, you must also specify query_temp_dataset.
