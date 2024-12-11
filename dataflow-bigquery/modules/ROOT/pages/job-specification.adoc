@@ -31,7 +31,9 @@ The `sources` section contains the definitions of the data sources, as a list. A
 {
   "type": "bigquery",
   "name": "<sourceName>",
-  "query": "<bigQuerySqlQuery>"
+  "query": "<bigQuerySqlQuery>",
+  "query_temp_project": "<projectName>",
+  "query_temp_dataset": "<datasetName>"
 }
 ----
 
@@ -41,6 +43,15 @@ The `sources` section contains the definitions of the data sources, as a list. A
 
   1. the source table can have more columns than what you select in the query;
   2. multiple targets can use the same source, potentially filtering it for a different subset of columns.
+
+- `query_temp_project` (string, optional) Specifies the project to use for temporary data processing by Apache Beam. If not set, Apache
+ Beam will use the current project.
+- `query_temp_dataset` (string, optional) Specifies the dataset to use for temporary data processing by Apache Beam. If not set, Apache Beam will create its own datasets for processing.
+
+[IMPORTANT]
+If you set query_temp_project, you must also specify query_temp_dataset.
+You can specify only query_temp_dataset, and Apache Beam will use the current project.
+If neither is set, Apache Beam will use the current project and create its own datasets for temporary processing.
 
 [WARNING]
 Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
@@ -53,10 +64,11 @@ Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are n
 {
   "type": "bigquery",
   "name": "persons",
-  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons"
+  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons",
+  "query_temp_project": "temp-project",
+  "query_temp_dataset": "temp-dataset"
 }
 ----
-
 
 include::{common}:partial$job-specification.adoc[tags=targets]
 
