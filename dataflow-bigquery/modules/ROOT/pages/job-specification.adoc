@@ -48,9 +48,13 @@ The `sources` section contains the definitions of the data sources, as a list. A
 - `query_temp_dataset` (string, optional) The BigQuery dataset to store temporary query results (defaults to a new temporary dataset).
 
 [IMPORTANT]
+====
+Specifying a temporary project and/or dataset is helpful in cases when you only have _read_ permissions on the project/dataset where the sources are located.
+
 If you set `query_temp_project`, you must also specify `query_temp_dataset`. +
 You can specify `query_temp_dataset` alone; the template then uses the current project. +
 If neither is set, the template uses the current project and create its own datasets for temporary processing.
+====
 
 [WARNING]
 Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
