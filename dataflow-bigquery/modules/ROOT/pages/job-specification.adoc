@@ -67,6 +67,7 @@ Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are n
 }
 ----
 
+
 include::{common}:partial$job-specification.adoc[tags=targets]
 
 include::{common}:partial$job-specification.adoc[tags=transformations]
