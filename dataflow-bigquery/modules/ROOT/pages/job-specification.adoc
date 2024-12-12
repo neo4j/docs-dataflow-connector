@@ -44,14 +44,13 @@ The `sources` section contains the definitions of the data sources, as a list. A
   1. the source table can have more columns than what you select in the query;
   2. multiple targets can use the same source, potentially filtering it for a different subset of columns.
 
-- `query_temp_project` (string, optional) Specifies the project to store temporary query results, processed by Apache Beam. If not set, Apache
- Beam will use the current project.
-- `query_temp_dataset` (string, optional) Specifies the dataset to store temporary query results, processed by Apache Beam. If not set, Apache Beam will create its own datasets for processing.
+- `query_temp_project` (string, optional) The Google Cloud project to store temporary query results (defaults to the current project).
+- `query_temp_dataset` (string, optional) The BigQuery dataset to store temporary query results (defaults to a new temporary dataset).
 
 [IMPORTANT]
-If you set query_temp_project, you must also specify query_temp_dataset.
-You can specify only query_temp_dataset, and Apache Beam will use the current project.
-If neither is set, Apache Beam will use the current project and create its own datasets for temporary processing.
+If you set `query_temp_project`, you must also specify `query_temp_dataset`. +
+You can specify `query_temp_dataset` alone; the template then uses the current project. +
+If neither is set, the template uses the current project and create its own datasets for temporary processing.
 
 [WARNING]
 Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
@@ -64,9 +63,7 @@ Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are n
 {
   "type": "bigquery",
   "name": "persons",
-  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons",
-  "query_temp_project": "temp-project",
-  "query_temp_dataset": "temp-dataset"
+  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM team-connectors-dev.movies.persons"
 }
 ----
 
