@@ -31,7 +31,9 @@ The `sources` section contains the definitions of the data sources, as a list. A
 {
   "type": "bigquery",
   "name": "<sourceName>",
-  "query": "<bigQuerySqlQuery>"
+  "query": "<bigQuerySqlQuery>",
+  "query_temp_project": "<projectName>",
+  "query_temp_dataset": "<datasetName>"
 }
 ----
 
@@ -41,6 +43,18 @@ The `sources` section contains the definitions of the data sources, as a list. A
 
   1. the source table can have more columns than what you select in the query;
   2. multiple targets can use the same source, potentially filtering it for a different subset of columns.
+
+- `query_temp_project` (string, optional) The Google Cloud project to store temporary query results (defaults to the current project).
+- `query_temp_dataset` (string, optional) The BigQuery dataset to store temporary query results (defaults to a new temporary dataset).
+
+[IMPORTANT]
+====
+Specifying a temporary project and/or dataset is helpful in cases when you only have _read_ permissions on the project/dataset where the sources are located.
+
+If you set `query_temp_project`, you must also specify `query_temp_dataset`. +
+You can specify `query_temp_dataset` alone; the template then uses the current project. +
+If neither is set, the template uses the current project and create its own datasets for temporary processing.
+====
 
 [WARNING]
 Columns of type `BIGNUMERIC`, `GEOGRAPHY`, `JSON`, `INTERVAL` and `STRUCT` are not supported.
