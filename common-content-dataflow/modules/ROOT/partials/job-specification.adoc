@@ -29,6 +29,8 @@ It consists of a JSON object with four sections.
 
 At a high level, the job fetches data from `sources` and transforms/imports them into the `targets`.
 
+A valid specification file contains **at least** one source object and one target object.
+
 end::intro[]
 
 
@@ -95,6 +97,8 @@ tag::targets[]
 == Targets
 
 The `targets` section contains the definitions of the graph entities that will result from the import.
+
+You must specify **at least** one target object.
 
 Neo4j represents objects with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-node[nodes] (ex. `movies`, `people`) and connects them with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship[relationships] (ex. `ACTED_IN`, `DIRECTED`).
 Each object in the targets section will generate a corresponding entity (node or relationship) in Neo4j drawing data from a source.
@@ -261,7 +265,7 @@ If the source is not clean in this respect, think of cleaning it upfront in the 
 Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
 [IMPORTANT]
-The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
+The options `key_constraints` and `existence_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
 [#node-config]
@@ -391,11 +395,6 @@ It must also contain information about which node targets the relationship links
 - `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `match` or `merge`, respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
 - `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
 
-[IMPORTANT]
-====
-`keys`, `unique` and `mandatory` options require Aura or Neo4j Enterprise Edition, and will not have any effect when run against a Neo4j Community Edition installation.
-====
-
 
 [#relationship-properties]
 ==== Properties
@@ -518,7 +517,7 @@ If the source is not clean in this respect, think of cleaning it upfront in the 
 Alternatively, use the `where` attribute in a xref:source-transformations[source transformation].
 
 [IMPORTANT]
-The options `key_constraints` and `unique_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
+The options `key_constraints` and `existence_constraints` require Neo4j/Aura Enterprise Edition, and do not have any effect when run against a Neo4j Community Edition installation.
 
 
 [#relationship-config]
@@ -849,6 +848,7 @@ tag::variables[]
 [#variables]
 == Variables
 
+////
 Key-values can be supplied in Dataflow to replace `$` delimited tokens.
 You can provide parameters in the `Options JSON` field when creating the Dataflow job, as a JSON object.
 Variable interpolation works in:
@@ -861,5 +861,8 @@ Variable interpolation works in:
 - HTTP GET/POST URL and header values.
 
 Variables must be prefixed by the `$` symbol (ex. `$limit`), and may be used in job specification files and in `readQuery` or `inputFilePattern` (source URI) xref:cli.adoc[command-line] parameters.
+////
+
+Variables are not supported yet.
 
 end::variables[]

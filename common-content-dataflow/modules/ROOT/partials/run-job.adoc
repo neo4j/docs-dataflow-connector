@@ -1,5 +1,9 @@
 = Run an import job
 
+[TIP]
+You can validate your specification file locally via the link:https://github.com/neo4j-contrib/local-dataflow-runner/[Local Dataflow Runner].
+The tool allows you to locally verify that your job file conforms to the template specification and execute it against a temporary Neo4j container. It relies on [Apache Beam's Direct Runner](https://beam.apache.org/documentation/runners/direct/) (there may still be runtime errors in Dataflow). This form of validation is much quicker than submitting a Dataflow job.
+
 Once the job specification is ready, upload its JSON file to your Cloud Storage bucket and go to link:https://console.cloud.google.com/dataflow/createjob[Dataflow -> Create job from template].
 
 To create a job, specify the following fields:
