@@ -98,6 +98,8 @@ tag::targets[]
 
 The `targets` section contains the definitions of the graph entities that will result from the import.
 
+You must specify **at least** one target object.
+
 Neo4j represents objects with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-node[nodes] (ex. `movies`, `people`) and connects them with link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship[relationships] (ex. `ACTED_IN`, `DIRECTED`).
 Each object in the targets section will generate a corresponding entity (node or relationship) in Neo4j drawing data from a source.
 It is also possible to run custom Cypher queries.
