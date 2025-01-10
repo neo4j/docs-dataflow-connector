@@ -81,9 +81,9 @@ All settings have a default, so you don't need to specify them unless you wish t
 - `reset_db` (bool) -- Whether to clear the target database before importing.
 Deletes data, indexes, and constraints.
 - `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
-- `node_target_batch_size` (int) -- Number of nodes to be processed for each transaction.
-- `relationship_target_batch_size` (int) -- Number of relationships to be processed for each transaction.
-- `query_target_batch_size` (int) -- Number of rows to be processed for each custom query.
+- `node_target_batch_size` (int) -- Number of rows to be processed for each node target's import transaction.
+- `relationship_target_batch_size` (int) -- Number of rows to be processed for each relationship target's transaction.
+- `query_target_batch_size` (int) -- Number of rows to be processed for each custom query's transaction.
 - `node_target_parallelism` (int) -- Number of max concurrent transactions for node targets per worker.
 - `relationship_target_parallelism` (int) -- Number of max concurrent transactions for relationship targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
 - `query_target_parallelism` (int) -- Number of max concurrent transactions for Cypher query targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
