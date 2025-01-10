@@ -656,6 +656,14 @@ tag::transformations[]
 
 Each node and relationship target can optionally have a `source_transformation` attribute containing aggregation functions. This can be useful to extract higher-level dimensions from a more granular source. Aggregations result in extra fields that become available for property mappings.
 
+[WARNING]
+A source is by default processed only once. Its data is then fanned out across its targets.
+This is not true when targets for that source define source transformations. Source transformations results in an
+extended source query. Since the resulting query is different from the original, the source data is then fetched several
+times (once for targets of that source without transformations and as many times as there are targets defining
+transformations).
+Specifically for BigQuery sources, it is therefore important to note that *the original source query must be deterministic*.
+
 [source, json, role=nocollapse]
 ----
 "source_transformations": {
