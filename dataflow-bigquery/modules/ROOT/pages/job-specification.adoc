@@ -76,6 +76,12 @@ include::{common}:partial$job-specification.adoc[tags=targets]
 
 include::{common}:partial$job-specification.adoc[tags=transformations]
 
+[WARNING]
+By default, a source is processed only once; its data is then fanned out across its targets.
+However, targets with a source transformation trigger a new data fetch, as the resulting source query differs from the default.
+Sources are thus processed once for targets of that source without transformations plus as many times as targets defining transformations.
+As a consequence, *the original source query must be deterministic*, or different targets could receive different data.
+
 include::{common}:partial$job-specification.adoc[tags=actions]
 
 include::{common}:partial$job-specification.adoc[tags=variables]
