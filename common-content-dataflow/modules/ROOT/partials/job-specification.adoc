@@ -9,6 +9,7 @@ It consists of a JSON object with four sections.
 [source, JSON]
 ----
 {
+  "version": "1",
   "config": { ... },  // <1>
   "sources": [  // <2>
     { ... }
