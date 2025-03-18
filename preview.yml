@@ -1,6 +1,6 @@
 site:
   title: Neo4j Google Dataflow Template
-  url: https://neo4j.com/docs/dataflow-bigquery
+  url: https://neo4j.com/docs/
 #  start_page: dataflow-bigquery:ROOT:index.adoc
 
 content:
