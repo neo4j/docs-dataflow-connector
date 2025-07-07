@@ -452,7 +452,7 @@ You can list several objects in `key_mappings` (each with the same structure) to
     "name": "Persons",
     "key_mappings": [
       {
-        "source_field": "user_id",
+        "source_field": "person_tmdbId",
         "node_property": "id"
       }
     ]
@@ -461,7 +461,7 @@ You can list several objects in `key_mappings` (each with the same structure) to
     "name": "Movies",
     "key_mappings": [
       {
-        "source_field": "movie_id",
+        "source_field": "movieId",
         "node_property": "id"
       }
     ]
