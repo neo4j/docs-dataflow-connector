@@ -141,7 +141,7 @@ Node entities must be grouped in a list keyed `nodes` inside the `targets` objec
 [#node-compulsory-fields]
 ==== Compulsory fields
 
-Each node object must at minimum have attributes `source`, `name`, `labels`, and `properties`.
+Each node object must at minimum have attributes `source`, `name`, `labels`, `properties`, and `write_mode`.
 
 [source, json]
 ----
@@ -371,9 +371,7 @@ Relationship entities must be grouped in a list keyed `relationships` inside the
 [#relationship-compulsory-fields]
 ==== Compulsory fields
 
-Each relationship object must at minimum have attributes `source`, `name`, and `type`.
-
-It must also contain information about which node targets the relationship links together. You provide this through `start_node_reference` and `end_node_reference`.
+Each relationship object must at minimum have attributes `source`, `name`, `type`, `start_node_reference`, `end_node_reference`, `node_match_mode`, and `write_mode`.
 
 [source, json]
 ----
@@ -381,8 +379,8 @@ It must also contain information about which node targets the relationship links
   "source": "<sourceName>",
   "name": "<targetName>",
   "type": "<relationshipType>",
-  "start_node_reference": "<nodeTargetName>",
-  "end_node_reference": "<nodeTargetName>",
+  "start_node_reference": "<nodeTarget>",
+  "end_node_reference": "<nodeTarget>",
   "node_match_mode": "<match/merge>",
   "write_mode": "<create/merge>"
 }
@@ -391,10 +389,85 @@ It must also contain information about which node targets the relationship links
 - `source` (string) -- The name of the source this target should draw data from. Should match one of the names from the `sources` objects.
 - `name` (string) -- A human-friendly name for the target (unique among all names).
 - `type` (string) -- link:https://neo4j.com/docs/getting-started/appendix/graphdb-concepts/#graphdb-relationship-type[Type] to assign to the relationship.
-- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship.
-- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship.
 - `node_match_mode` (string) -- What Cypher clause to use to fetch the source/end nodes ahead of creating a relationship between them. Valid values are `match` or `merge`, respectively resulting in the Cypher clauses link:https://neo4j.com/docs/cypher-manual/current/clauses/match/[`MATCH`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`].
 - `write_mode` (string) -- The creation mode in Neo4j. Either `create` or `merge`. See link:https://neo4j.com/docs/cypher-manual/current/clauses/create/[`CREATE`] and link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/[`MERGE`] for info on the Cypher clauses behavior.
+
+The attributes `start/end_node_reference` contain information about which node targets the relationship links together.
+You can specify them in two ways.
+
+[.tabbed-example]
+====
+[.include-with-simple-lookup]
+=====
+[source,json]
+----
+  "start_node_reference": "<nodeTargetName>",
+  "end_node_reference": "<nodeTargetName>",
+----
+
+- `start_node_reference` (string) -- The name of the node target that acts as _start_ for the relationship.
+- `end_node_reference` (string) -- The name of the node target that acts as _end_ for the relationship.
+
+.Example
+[source,json]
+----
+  "start_node_reference": "Persons",
+  "end_node_reference": "Movies",
+----
+=====
+
+[.include-with-advanced-lookup]
+=====
+[source,json]
+----
+  "start_node_reference": {
+    "name": "<nodeTargetName>",
+    "key_mappings": [
+      {
+        "source_field": "<sourceMappingKey>",
+        "node_property": "<nodeTargetMappingKey>"
+      }
+    ]
+  },
+  "end_node_reference": {
+    "name": "<nodeTargetName>",
+    "key_mappings": [
+      {
+        "source_field": "<sourceMappingKey>",
+        "node_property": "<nodeTargetMappingKey>"
+      }
+    ]
+  },
+----
+
+- `start_node_reference` (object) -- The name of the node target that acts as _start_ for the relationship, together with the column name that acts as key in the source (`source_field`) and the imported property that acts as key in the node target (`node_property`).
+- `end_node_reference` (object) -- The name of the node target that acts as _end_ for the relationship, together with the column name that acts as key in the source (`source_field`) and the imported property that acts as key in the node target (`node_property`).
+
+.Example
+[source,json]
+----
+  "start_node_reference": {
+    "name": "Persons",
+    "key_mappings": [
+      {
+        "source_field": "user_id",
+        "node_property": "id"
+      }
+    ]
+  },
+  "end_node_reference": {
+    "name": "Movies",
+    "key_mappings": [
+      {
+        "source_field": "movie_id",
+        "node_property": "id"
+      }
+    ]
+  },
+----
+=====
+
+====
 
 
 [#relationship-properties]
