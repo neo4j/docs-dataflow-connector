@@ -443,8 +443,6 @@ You can specify them in two ways.
 - `start_node_reference` (object) -- The name of the node target that acts as _start_ for the relationship, together with the column names that act as keys in the source (`source_field`) and the imported properties that act as keys in the node target (`node_property`).
 - `end_node_reference` (object) -- The name of the node target that acts as _end_ for the relationship, together with the column names that act as keys in the source (`source_field`) and the imported properties that act as keys in the node target (`node_property`).
 
-You can list several objects in `key_mappings` (each with the same structure) to account for composite keys.
-
 .Example
 [source,json]
 ----
@@ -468,6 +466,9 @@ You can list several objects in `key_mappings` (each with the same structure) to
   },
 ----
 =====
+
+You can list several objects in `key_mappings` (each with the same structure) to account for composite keys.
+
 
 ====
 
