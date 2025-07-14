@@ -1,13 +1,14 @@
 site:
   title: Neo4j Google Dataflow Template
   url: https://neo4j.com/docs/
-#  start_page: dataflow-bigquery:ROOT:index.adoc
+  start_page: dataflow:ROOT:index.adoc
 
 content:
   sources:
   - url: ./
     branches: HEAD
     start_paths:
+    - dataflow
     - dataflow-google-cloud
     - dataflow-bigquery
     - common-content-dataflow

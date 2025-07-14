@@ -1,0 +1,39 @@
+= Dataflow flex templates
+:page-role: dataflow
+:page-layout: docs-home
+:page-toclevels: -1
+
+
+
+[NOTE]
+--
+This page is published only as part of local builds and PR previews.
+It is not included in the published Neo4j drivers documentation.
+--
+
+
+== Dataflow flex templates
+
+
+=== Bigquery
+
+[.category]
+dataflow
+
+[.icon]
+image:{neo4j-docs-base-uri}/_images/icon-bigquery.svg[]
+
+[.link]
+xref:dataflow-bigquery:ROOT:index.adoc[Guide]
+
+
+=== Google Cloud
+
+[.category]
+dataflow
+
+[.icon]
+image:{neo4j-docs-base-uri}/_images/icon-googlecloud.svg[]
+
+[.link]
+xref:dataflow-google-cloud:ROOT:index.adoc[Guide]
