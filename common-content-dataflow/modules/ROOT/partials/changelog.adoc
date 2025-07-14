@@ -1,0 +1,28 @@
+= Changelog
+
+This page lists changes to the TESTING_TO_SEE_OK.
+
+== Version 5.1.13
+
+[cols="1,2", options="header"]
+|===
+| Feature | Details
+
+a|
+label:bug[]
+label:fixed[]
+
+Introduce `neo4j.query.force-maps-as-struct`
+| For the source query strategy, users can now control whether maps with homogeneous value types are encoded as structs or maps.
+|===
+== Version 5.1.12
+
+This is a maintenance release which provides updated dependencies.
+
+== Version 5.1.11
+
+This is a maintenance release which provides updated dependencies.
+
+== Version 5.1.10
+
+This is a maintenance release which provides updated dependencies.
