@@ -4,7 +4,7 @@ This page lists changes to the Dataflow Flex Template for BigQuery and/or Google
 
 == Release 2025-06-10-01_RC00
 
-* Add support to see get underlying Neo4j driver log output
+* Add support to see underlying Neo4j driver's log-output
 
 == Release 2025-01-26-00_RC00
 
@@ -16,13 +16,13 @@ This page lists changes to the Dataflow Flex Template for BigQuery and/or Google
 
 == Release 2025-01-14-00_RC00
 
-* Re-added node target's existance constraint
+* Re-added node target's existence constraint
 
 == Release 2025-01-07-00_RC01
 
-* Remove node target's existance constraint
+* Remove node target's existence constraint
 * Fix an issue with custom Cypher queries
-* Further minor bugfixes
+* Further minor bug-fixes
 
 == Release 2024-12-10-00_RC00
 
