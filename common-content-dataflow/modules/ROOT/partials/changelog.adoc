@@ -2,76 +2,76 @@
 
 This page lists changes to the Dataflow Flex Template for BigQuery and/or Google Cloud to Neo4j.
 
-== 2025-06-10-01_RC00
+== Release 2025-06-10-01_RC00
 
 * Add support to see get underlying Neo4j driver log output
 
-== 2025-01-26-00_RC00
+== Release 2025-01-26-00_RC00
 
 * Add support for calendar based version names of the Neo4j driver
 
-== 2025-01-22-01_RC00
+== Release 2025-01-22-01_RC00
 
 * Updated Neo4j driver version from v4.4.18 to v5.27.0
 
-== 2025-01-14-00_RC00
+== Release 2025-01-14-00_RC00
 
 * Re-added node target's existance constraint
 
-== 2025-01-07-00_RC01
+== Release 2025-01-07-00_RC01
 
 * Remove node target's existance constraint
 * Fix an issue with custom Cypher queries
 * Further minor bugfixes
 
-== 2024-12-10-00_RC00
+== Release 2024-12-10-00_RC00
 
 * Added support for BigQuery properties 'query_temp_project' and 'query_temp_dataset'
 
-== 2024-11-26-00_RC00
+== Release 2024-11-26-00_RC00
 
 * Improved stability of node matching
 * Improved stability of YAML parsing
 
-== 2024-11-19-00_RC00
+== Release 2024-11-19-00_RC00
 
 * Add YAML support when parsing specification
 
 
-== 2024-11-12-00_RC00
+== Release 2024-11-12-00_RC00
 
 * Empty strings are now treated as null values when importing from CSV files.
 
 
-== 2024-09-18-00_RC00
+== Release 2024-09-18-00_RC00
 
 * Introduce new import specification
 
-== 2024-08-13-00_RC00
+== Release 2024-08-13-00_RC00
 
 * Fix serialization issues with Cypher actions
 
-== 2024-05-28-00_RC00
+== Release 2024-05-28-00_RC00
 
 * Fix a bug regarding overlapping names between source fields and nodes/relationships
 * Stability improvements and typo fixes
 
-== 2024-04-02-00_RC00
+== Release 2024-04-02-00_RC00
 
 * Automatically use Neo4j version/edition for reset and schema generation
 
-== 2024-03-21-00_RC00
+== Release 2024-03-21-00_RC00
 
 * Extended metadata for imports
 * Extended support for ISO date times
 * Stability improvements
 
-== 2024-03-12-00_RC00
+== Release 2024-03-12-00_RC00
 
 * Improvements to parallelism
 * Add metadata for transactions and all import steps
 * Include user agent when connecting to Neo4j
 
-== 2024-01-30-01_RC00
+== Release 2024-01-30-01_RC00
 
 This is a maintenance release which provides updated dependencies.
