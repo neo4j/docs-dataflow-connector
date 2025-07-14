@@ -2,27 +2,66 @@
 
 This page lists changes to the Dataflow Flex Template for BigQuery and/or Google Cloud to Neo4j.
 
-== Version 5.1.13
+== 2025-06-10-01_RC00
 
-[cols="1,2", options="header"]
-|===
-| Feature | Details
 
-a|
-label:bug[]
-label:fixed[]
+== 2025-01-26-00_RC00
 
-Introduce `neo4j.query.force-maps-as-struct`
-| For the source query strategy, users can now control whether maps with homogeneous value types are encoded as structs or maps.
-|===
-== Version 5.1.12
 
-This is a maintenance release which provides updated dependencies.
+== 2025-01-22-01_RC00
 
-== Version 5.1.11
 
-This is a maintenance release which provides updated dependencies.
+== 2025-01-14-00_RC00
 
-== Version 5.1.10
 
-This is a maintenance release which provides updated dependencies.
+== 2025-01-07-00_RC01
+
+
+== 2024-12-10-00_RC00
+
+
+== 2024-11-26-00_RC00
+
+
+== 2024-11-19-00_RC00
+
+
+== 2024-11-12-00_RC00
+
+
+== 2024-10-29-00_RC00
+
+
+== 2024-09-18-00_RC00
+
+
+== 2024-08-13-00_RC00
+
+
+== 2024-05-28-00_RC00
+
+
+== 2024-05-13-00_RC00
+
+
+== 2024-05-28-00_RC00
+
+
+== 2024-04-02-00_RC00
+
+
+== 2024-03-21-00_RC00
+
+
+== 2024-03-12-00_RC00
+
+
+== 2024-03-21-00_RC00
+
+
+== 2024-03-12-00_RC00
+
+
+== 2024-01-30-01_RC00
+
+
