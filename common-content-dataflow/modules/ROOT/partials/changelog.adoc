@@ -5,7 +5,7 @@ This page lists changes to the Dataflow Flex Template for BigQuery and/or Google
 You can check the deployment status of a release by running `gsutil ls gs://dataflow-templates/`.
 
 Releases are gradually deployed, some regions may be updated before others.
-To check the release status of https://cloud.google.com/compute/docs/regions-zones[a particular region], you can run `gsutil ls gs://dataflow-templates-${region}/` (e.g. `gsutil ls gs://dataflow-templates-europe-west2/`).
+To check the release status of https://cloud.google.com/compute/docs/regions-zones[a particular region], you can run `gsutil ls gs://dataflow-templates-$\{region}/` (e.g. `gsutil ls gs://dataflow-templates-europe-west2/`).
 
 == Release 2025-06-10-01_RC00
 
