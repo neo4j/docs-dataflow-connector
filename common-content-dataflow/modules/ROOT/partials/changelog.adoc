@@ -9,14 +9,15 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 
 == Release 2025-06-10-01_RC00
 
-* Add support to see underlying Neo4j driver's log-output
+* Add support to see underlying Neo4j driver's Bolt logs
 
 == Release 2025-01-26-00_RC00
 
-* Add support for calendar based version names of the Neo4j driver
+* Add support for calendar-based version names of the Neo4j database
 
 == Release 2025-01-22-01_RC00
 
+* Switch to Java 17
 * Updated Neo4j driver version from v4.4.18 to v5.27.0
 
 == Release 2025-01-14-00_RC00
@@ -33,24 +34,17 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 
 * Added support for BigQuery properties 'query_temp_project' and 'query_temp_dataset'
 
-== Release 2024-11-26-00_RC00
-
-* Improved stability of node matching
-* Improved stability of YAML parsing
-
 == Release 2024-11-19-00_RC00
 
 * Add YAML support when parsing specification
-
 
 == Release 2024-11-12-00_RC00
 
 * Empty strings are now treated as null values when importing from CSV files.
 
-
 == Release 2024-09-18-00_RC00
 
-* Introduce new import specification
+* Introduce new import specification (https://github.com/neo4j/import-spec)
 
 == Release 2024-08-13-00_RC00
 
@@ -59,17 +53,11 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 == Release 2024-05-28-00_RC00
 
 * Fix a bug regarding overlapping names between source fields and nodes/relationships
-* Stability improvements and typo fixes
-
-== Release 2024-04-02-00_RC00
-
-* Automatically use Neo4j version/edition for reset and schema generation
 
 == Release 2024-03-21-00_RC00
 
-* Extended metadata for imports
-* Extended support for ISO date times
-* Stability improvements
+* Allow users to specify only the first _n_ columns of a text file source
+* Improve temporal type support
 
 == Release 2024-03-12-00_RC00
 
@@ -77,6 +65,37 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 * Add metadata for transactions and all import steps
 * Include user agent when connecting to Neo4j
 
-== Release 2024-01-30-01_RC00
+== Release 2023-12-12-00_RC00
 
-This is a maintenance release which provides updated dependencies.
+* Allow connection information to be read from Secret Manager
+* Add support for all authentication types
+
+== Release 2023-09-19-00_RC00
+
+* Verify Neo4j connectivity early
+* Improve error message when database reset fails
+* Fix support for boolean values
+
+== Release 2023-08-15-00_RC00
+
+* Fix connection leak when creating indices/constraints
+* Support multiple key definitions in "transposed" syntax
+
+== Release 2023-07-25-00_RC00
+
+* Optimize database query
+* Remove unused settings (`automap`, `default`, `options`)
+
+== Release 2023-07-18-00_RC00
+
+* Fixes mix-up between parallelism and batch size settings
+* Fixes Neo4j driver usages
+    * Properly close driver and sessions
+    * Rely on result consumption API instead of explicit iteration
+* Support constraints and indices for relationship targets
+* Allow start/end nodes to be merged instead of created
+
+
+== Release 2022-10-18-00_RC00
+
+Hello world! Initial release of the template.
