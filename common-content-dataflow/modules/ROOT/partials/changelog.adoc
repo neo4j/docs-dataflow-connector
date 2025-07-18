@@ -32,7 +32,7 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 
 == Release 2024-12-10-00_RC00
 
-* Added support for BigQuery properties 'query_temp_project' and 'query_temp_dataset'
+* Added support for BigQuery properties `query_temp_project` and `query_temp_dataset`
 
 == Release 2024-11-19-00_RC00
 
