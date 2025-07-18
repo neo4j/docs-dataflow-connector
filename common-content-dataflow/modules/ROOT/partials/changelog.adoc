@@ -44,7 +44,7 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 
 == Release 2024-09-18-00_RC00
 
-* Introduce new import specification (https://github.com/neo4j/import-spec)
+* Introduce new import specification (https://github.com/neo4j/import-spec), on which Dataflow templates base their import specifications.
 
 == Release 2024-08-13-00_RC00
 
