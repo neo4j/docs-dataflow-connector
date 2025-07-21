@@ -3,3 +3,4 @@
 * xref:job-specification.adoc[]
 * xref:run-job.adoc[]
 * xref:cli.adoc[]
+* xref:changelog.adoc[]
