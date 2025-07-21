@@ -6,6 +6,7 @@ You can check the deployment status of a release by running `gsutil ls gs://data
 
 Releases are gradually deployed, some regions may be updated before others.
 To check the release status of https://cloud.google.com/compute/docs/regions-zones[a particular region], you can run `gsutil ls gs://dataflow-templates-$\{region}/` (e.g. `gsutil ls gs://dataflow-templates-europe-west2/`).
+It is not possible to run any other version than the *latest* version of your region.
 
 == Release 2025-06-10-01_RC00
 
@@ -13,7 +14,7 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 
 == Release 2025-01-26-00_RC00
 
-* Add support for calendar-based version names of the Neo4j database
+* Support for self-managed deployments of Neo4j versions 2025.x
 
 == Release 2025-01-22-01_RC00
 
@@ -27,7 +28,7 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 == Release 2025-01-07-00_RC01
 
 * Remove node target's existence constraint
-* Fix an issue with custom Cypher queries
+* Fix an edge case where some custom Cypher queries could fetch data incorrectly, causing null-pointer exceptions
 * Further minor bug-fixes
 
 == Release 2024-12-10-00_RC00
@@ -40,11 +41,11 @@ To check the release status of https://cloud.google.com/compute/docs/regions-zon
 
 == Release 2024-11-12-00_RC00
 
-* Empty strings are now treated as null values when importing from CSV files.
+* Empty strings are now treated as null values when importing from CSV files
 
 == Release 2024-09-18-00_RC00
 
-* Introduce new import specification (https://github.com/neo4j/import-spec), on which Dataflow templates base their import specifications.
+* Introduce new import specification (https://github.com/neo4j/import-spec), on which Dataflow templates base their import specifications
 
 == Release 2024-08-13-00_RC00
 
