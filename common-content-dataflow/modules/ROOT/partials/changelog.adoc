@@ -8,6 +8,11 @@ Releases are gradually deployed, some regions may be updated before others.
 To check the release status of https://cloud.google.com/compute/docs/regions-zones[a particular region], you can run `gsutil ls gs://dataflow-templates-$\{region}/` (e.g. `gsutil ls gs://dataflow-templates-europe-west2/`).
 It is not possible to run any version other than the *latest* one deployed in a given region.
 
+== Release 2026-02-17-00_RC00
+
+* Upgrade import-spec from 1.0.0-rc03 to 1.0.0-rc11
+This allows users to define mapping overrides for the key properties of start and end nodes
+
 == Release 2025-06-10-01_RC00
 
 * Add support to see underlying Neo4j driver's Bolt logs
