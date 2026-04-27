@@ -11,7 +11,7 @@ It is not possible to run any version other than the *latest* one deployed in a 
 == Release 2026-02-17-00_RC00
 
 * Upgrade import-spec from 1.0.0-rc03 to 1.0.0-rc11
-This allows users to define mapping overrides for the key properties of start and end nodes
+Support for defining mapping overrides for the key properties of start and end nodes
 
 == Release 2025-06-10-01_RC00
 
