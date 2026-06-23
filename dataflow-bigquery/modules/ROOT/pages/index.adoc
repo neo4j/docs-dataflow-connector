@@ -1,11 +1,11 @@
 = Introduction
 
-The Flex Template allows to import data from a BigQuery dataset into a Neo4j database, through a Dataflow job.
-It also allows to manipulate and transform the data at various steps of the import.
+The Flex Template allows you to import data from a BigQuery dataset into a Neo4j database, through a Dataflow job.
+It also allows you to manipulate and transform the data at various steps of the import.
 You can use the template for both first-time and incremental imports.
 
 This guide walks you through how to import an example BigQuery dataset into a Neo4j database using a Dataflow job.
-It also provides a public dataset you can experiment with, before you go on and create an import job for you own dataset.
+It also provides a public dataset you can experiment with, before you go on and create an import job for your own dataset.
 
 [NOTE]
-To import data from CSV files rather than BigQuery, checkout the xref:{page-component-version}@dataflow-google-cloud::index.adoc[Dataflow Flex Template for Google Cloud to Neo4j].
+To import data from CSV files rather than BigQuery, check out the xref:dataflow-google-cloud::index.adoc[Dataflow Flex Template for Google Cloud to Neo4j].

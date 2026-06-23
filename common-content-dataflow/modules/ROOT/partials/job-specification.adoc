@@ -81,7 +81,16 @@ All settings have a default, so you don't need to specify them unless you wish t
 
 - `reset_db` (bool) -- Whether to clear the target database before importing.
 Deletes data, indexes, and constraints.
-- `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
+- `index_all_properties` (bool) -- Whether to create range indexes on all imported properties.
+Defaults to `false`.
+See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
++
+[WARNING]
+====
+Enabling `index_all_properties` creates a range index on every imported property.
+This increases import time, write overhead, and index storage, and can lead to index bloat on large datasets.
+Enable it only when you need broad query coverage.
+====
 - `node_target_batch_size` (int) -- Number of rows to be processed for each node target's import transaction.
 - `relationship_target_batch_size` (int) -- Number of rows to be processed for each relationship target's transaction.
 - `query_target_batch_size` (int) -- Number of rows to be processed for each custom query's transaction.
