@@ -14,23 +14,12 @@ You need a running Neo4j instance which the data can flow into.
 If you don't have an instance yet, you have two options:
 
 - sign up for link:https://neo4j.com/cloud/aura/[Neo4j Aura]
-- install and self-host Neo4j (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation])
-
-[IMPORTANT]
-====
-Connectivity requirements depend on how your Neo4j instance is deployed:
-
-*Aura*::
-Use the connection URI (`neo4j+s://…`).
-
-*Self-managed*::
-Use an address reachable from Dataflow workers.
-====
+- install and self-host Neo4j (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
 
 [IMPORTANT]
 ====
 The template uses link:https://neo4j.com/docs/cypher-manual/current/constraints/[constraints], some of which are only available in Neo4j/Aura Enterprise Edition installations.
-Although Dataflow jobs can run on **Neo4j Community Edition instances, this is not officially supported**.
+Although the Dataflow jobs are able to run **on Neo4j Community Edition instances, most constraints will not be created**.
 You have thus to ensure that the source data and job specification are prepared accordingly.
 ====
 
@@ -141,14 +130,6 @@ The connection file can be uploaded either as a secret to Google Cloud Secret Ma
 You need a link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket.
 This is the one and only location from where the Dataflow job can source files (both configuration files and source CSVs, if any).
 // end::gcs-bucket[]
-
-
-// tag::gcs-bucket-bigquery[]
-== Google Cloud Storage bucket
-
-You need a link:https://console.cloud.google.com/storage/[Google Cloud Storage] bucket.
-This is the only location from which the Dataflow job can read configuration files.
-// end::gcs-bucket-bigquery[]
 
 
 // tag::dataflow-job[]

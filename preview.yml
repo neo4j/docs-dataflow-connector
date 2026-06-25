@@ -25,8 +25,6 @@ ui:
 
 urls:
   html_extension_style: indexify
-  latest_version_segment: current
-  latest_version_segment_strategy: redirect:to
 
 antora:
   extensions:
