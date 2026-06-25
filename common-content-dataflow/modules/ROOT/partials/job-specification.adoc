@@ -79,15 +79,17 @@ All settings have a default, so you don't need to specify them unless you wish t
 }
 ----
 
-- `reset_db` (bool) -- Whether to clear the target database before importing.
+- `reset_db` (bool; default: `false`) -- Whether to clear the target database before importing.
 Deletes data, indexes, and constraints.
-- `index_all_properties` (bool) -- Whether to create indexes for all properties. See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
-- `node_target_batch_size` (int) -- Number of rows to be processed for each node target's import transaction.
-- `relationship_target_batch_size` (int) -- Number of rows to be processed for each relationship target's transaction.
-- `query_target_batch_size` (int) -- Number of rows to be processed for each custom query's transaction.
-- `node_target_parallelism` (int) -- Number of max concurrent transactions for node targets per worker.
-- `relationship_target_parallelism` (int) -- Number of max concurrent transactions for relationship targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
-- `query_target_parallelism` (int) -- Number of max concurrent transactions for Cypher query targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
+- `index_all_properties` (bool; default: `false`) -- Whether to create range indexes on all imported properties.
+Indexes increase import time, write overhead, and storage requirements.
+See link:https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/overview/[Cypher -> Search-performance indexes].
+- `node_target_batch_size` (int; default: `5000`) -- Number of rows to be processed for each node target's import transaction.
+- `relationship_target_batch_size` (int; default: `1000`) -- Number of rows to be processed for each relationship target's transaction.
+- `query_target_batch_size` (int; default: `1000`) -- Number of rows to be processed for each custom query's transaction.
+- `node_target_parallelism` (int; default: `10`) -- Number of max concurrent transactions for node targets per worker.
+- `relationship_target_parallelism` (int; default: `1`) -- Number of max concurrent transactions for relationship targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
+- `query_target_parallelism` (int; default: `1`) -- Number of max concurrent transactions for Cypher query targets per worker. Values higher than `1` should be set with care, as they may result in deadlocks.
 
 end::configuration[]
 

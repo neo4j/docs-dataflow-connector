@@ -13,8 +13,8 @@ You need a running Neo4j instance which the data can flow into.
 
 If you don't have an instance yet, you have two options:
 
-- sign-up for a free link:https://neo4j.com/cloud/aura-free/[AuraDB] instance
-- install and self-host Neo4j in a location that is publicly accessible (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
+- sign up for link:https://neo4j.com/cloud/aura/[Neo4j Aura]
+- install and self-host Neo4j (see link:https://neo4j.com/docs/operations-manual/current/installation/[Neo4j -> Installation]) with port 7687 open (Bolt protocol)
 
 [IMPORTANT]
 ====
