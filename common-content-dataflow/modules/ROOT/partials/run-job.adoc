@@ -26,7 +26,8 @@ The connection metadata is specified either as a secret or a plain-text JSON res
 
 To prevent driver routing and discovery errors (e.g., `ServiceUnavailableException: Could not perform discovery`), your **Neo4j instance on GCP**, **PSC endpoint**, and **Dataflow workers** must all reside in the **same Google Cloud region**.
 
-Even with PSC Global Access enabled, cross-region Bolt connections frequently drop during routing table refreshes. When launching your job, ensure you align your regional settings:
+Even with PSC Global Access enabled, cross-region Bolt connections frequently drop during routing table refreshes. 
+When launching your job, ensure you align your regional settings:
 
 * Set the **Regional endpoint** to match your AuraDB and PSC endpoint region.
 * Explicitly target a subnetwork in that same region under **Optional Parameters > Subnetwork** (e.g., `regions/europe-west1/subnetworks/your-subnet`).
