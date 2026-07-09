@@ -20,5 +20,17 @@ The connection metadata is specified either as a secret or a plain-text JSON res
 - **Optional Parameters > Path to the Neo4j connection metadata** -- The JSON connection information file (from a Google Cloud Storage bucket).
 - **Optional Parameters > Secret ID for the Neo4j connection metadata** -- The ID of the secret containing the JSON connection information (from Google Secret Manager).
 
+[IMPORTANT]
+====
+**Using GCP Private Service Connect (PSC)?**
+
+To prevent driver routing and discovery errors (e.g., `ServiceUnavailableException: Could not perform discovery`), your **Neo4j instance on GCP**, **PSC endpoint**, and **Dataflow workers** must all reside in the **same Google Cloud region**.
+
+Even with PSC Global Access enabled, cross-region Bolt connections frequently drop during routing table refreshes. When launching your job, ensure you align your regional settings:
+
+* Set the **Regional endpoint** to match your AuraDB and PSC endpoint region.
+* Explicitly target a subnetwork in that same region under **Optional Parameters > Subnetwork** (e.g., `regions/europe-west1/subnetworks/your-subnet`).
+====
+
 [.shadow]
 image::{common}:image$dataflow-job-example.png[width=600]
