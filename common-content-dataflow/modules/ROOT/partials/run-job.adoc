@@ -22,7 +22,7 @@ The connection metadata is specified either as a secret or a plain-text JSON res
 
 [IMPORTANT]
 ====
-**Using GCP Private Service Connect (PSC)?**
+**If you are using GCP Private Service Connect (PSC):**
 
 To prevent driver routing and discovery errors (e.g., `ServiceUnavailableException: Could not perform discovery`), your **Neo4j instance on GCP**, **PSC endpoint**, and **Dataflow workers** must all reside in the **same Google Cloud region**.
 
