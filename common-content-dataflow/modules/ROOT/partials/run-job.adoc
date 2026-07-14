@@ -34,4 +34,4 @@ When launching your job, ensure you align your regional settings:
 ====
 
 [.shadow]
-image::{common}:image$dataflow-job-example.png[width=600]
+image::{common}:image$dataflow-job-example.png["Screenshot of the Google Cloud Dataflow 'Create job from template' page, filled in with a job name, the 'Google Cloud to Neo4j' template, and the paths to the job specification and Neo4j connection metadata files",width=600]
