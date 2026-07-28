@@ -148,10 +148,15 @@ IMPORTANT: If a mapping omits `target_property_type`, the field is treated as `s
 | `java.time.LocalDate`
 | Accepts ISO dates such as `2020-01-01`; ISO date-time values are also accepted and reduced to their date part.
 
-| `local_time`, `zoned_time`
+| `local_time`
 | Beam `Time` logical type
-| `java.time.LocalTime` or `java.time.OffsetTime`
-| Offset input such as `21:53:59+03:00` produces `OffsetTime`; input without an offset produces `LocalTime`.
+| `java.time.LocalTime`
+| Offset input such as `21:53:59` produces `LocalTime`.
+
+| `zoned_time`
+| Beam `Time` logical type
+| `java.time.OffsetTime`
+| Offset input such as `21:53:59+03:00` produces `OffsetTime`.
 
 | `local_datetime`
 | Beam `DateTime` logical type
