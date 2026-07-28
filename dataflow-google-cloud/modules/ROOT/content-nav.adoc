@@ -1,6 +1,7 @@
 * xref:index.adoc[]
 * xref:prerequisites.adoc[]
 * xref:job-specification.adoc[]
+* xref:data-type-conversions.adoc[]
 * xref:run-job.adoc[]
 * xref:cli.adoc[]
 * xref:changelog.adoc[]
