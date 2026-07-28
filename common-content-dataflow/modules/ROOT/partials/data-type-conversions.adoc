@@ -178,10 +178,10 @@ IMPORTANT: If a mapping omits `target_property_type`, the field is treated as `s
 | `String`
 | The template does not construct Neo4j `Point` values. Use custom Cypher such as `point()` if you need points.
 
-| `boolean_array`, `date_array`, `duration_array`, `float_array`, `integer_array`, `local_datetime_array`, `local_time_array`, `point_array`, `string_array`, `zoned_datetime_array`, `zoned_time_array`
+| `<any type>_array`
 | `ARRAY`
 | `null`
-| Array, iterable, map, and row target Beam types are not supported by the text cast path.
+| Array, iterable, map, and row target Beam types are not supported.
 |===
 
 
