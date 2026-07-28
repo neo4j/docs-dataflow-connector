@@ -171,7 +171,7 @@ IMPORTANT: If a mapping omits `target_property_type`, the field is treated as `s
 | `duration`
 | Beam `NanosDuration` logical type
 | Not supported end to end
-| The text cast parses ISO-8601 duration text such as `PT23H59M59S` to `java.time.Duration`, but the final Beam-to-Neo4j conversion currently rejects Beam duration logical values.
+| The text cast parses ISO-8601 duration text such as `PT23H59M59S` to `java.time.Duration`, but the final conversion step currently rejects Beam duration logical values.
 
 | `point`
 | `STRING`
