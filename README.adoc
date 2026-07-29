@@ -6,6 +6,12 @@ https://neo4j.com/docs/dataflow-bigquery/
 
 https://neo4j.com/docs/dataflow-google-cloud/
 
+== Branches
+
+* `main` contains live docs (latest version)
+* `dev` deploys to staging server
+* `0.1` contains live docs (v0.1)
+
 == Prereqs
 
 - link:https://nodejs.org/en/download/[Node.js]
