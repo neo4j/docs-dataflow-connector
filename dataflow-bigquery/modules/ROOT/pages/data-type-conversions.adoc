@@ -1,1 +1,105 @@
-include::{common}:partial$data-type-conversions.adoc[]
+include::{common}:partial$data-type-conversions-intro.adoc[]
+
+[#bigquery-types-to-neo4j]
+== BigQuery types to Neo4j
+
+BigQuery value conversion is driven by the BigQuery query result schema.
+
+IMPORTANT: Property mapping types specified with `target_property_type` do not currently coerce BigQuery values before they are written to Neo4j. To change a BigQuery value type, cast or transform it in the source query.
+
+[cols="1,1,1,3", options="header"]
+|===
+| BigQuery type
+| Beam type
+| Neo4j parameter value
+| Notes
+
+| `BOOL`, `BOOLEAN`
+| `BOOLEAN`
+| `Boolean`
+|
+
+| `INT64`, `INTEGER`
+| `INT64`
+| `Long`
+|
+
+| `FLOAT64`, `FLOAT`
+| `DOUBLE`
+| `Double`
+|
+
+| `NUMERIC`, `BIGNUMERIC`
+| `DECIMAL`
+| `Double`
+| Beam reads the value as `BigDecimal`; the template calls `doubleValue()`, so precision can be lost.
+
+| `STRING`
+| `STRING`
+| `String`
+|
+
+| `BYTES`
+| `BYTES`
+| `byte[]`
+| BigQuery rows expose bytes as Base64 text and Beam decodes them before the Neo4j write.
+
+| `DATE`
+| Beam SQL `DATE` logical type
+| `java.time.LocalDate`
+|
+
+| `TIME`
+| Beam SQL `TIME` logical type
+| `java.time.LocalTime`
+|
+
+| `DATETIME`
+| Beam SQL `DATETIME` logical type
+| `java.time.LocalDateTime`
+|
+
+| `TIMESTAMP`
+| `DATETIME` for standard microsecond timestamps
+| `java.time.OffsetDateTime` at UTC
+| The conversion uses epoch milliseconds, so sub-millisecond precision is not preserved.
+
+| `TIMESTAMP(12)`
+| Beam `Timestamp` logical type by default
+| `java.time.OffsetDateTime` at UTC
+| Beam's default schema conversion maps picosecond timestamps to nanosecond precision. If Beam maps the value as `STRING`, the template writes it as a string.
+
+| `GEOGRAPHY`
+| `STRING`
+| `String`
+| The template does not convert WKT text to Neo4j `Point` values. Use custom Cypher such as `point()` if you need points.
+
+| `JSON`
+| `STRING`
+| `String`
+| The JSON payload is written as text unless custom Cypher parses it.
+
+| `RECORD`, `STRUCT`
+| `ROW`
+| `Map<String,Object>`
+| Nested fields are recursively converted. This is useful only for custom Cypher query targets; node and relationship targets still only accept values Neo4j can store as properties.
+
+| `REPEATED` fields
+| `ARRAY` of the element Beam type
+| `List<Object>`
+| Element values are recursively converted. Repeated structs become lists of maps.
+
+| `RANGE`, `INTERVAL`
+| Not supported
+| Not written
+| Beam schema conversion rejects these types in the current template path.
+|===
+
+When a Beam `MAP` value reaches the writer, only string keys are supported. Map values are recursively converted, and non-string keys fail to write.
+
+[#null-values]
+== Null values
+
+BigQuery `NULL` values are passed through as Cypher `null` values.
+
+include::{common}:partial$data-type-conversions-nulls.adoc[]
