@@ -28,7 +28,7 @@ Set your values:
 export PROJECT=<your-project>
 export REGION=us-central1
 export BUCKET=<your-bucket>          # job spec, source files, staging, and temp
-export SECRET=neo4j-connection-info
+export SECRET=<your-secret>
 export SA=neo4j-dataflow
 export SA_EMAIL="$SA@$PROJECT.iam.gserviceaccount.com"
 ----
@@ -131,7 +131,7 @@ export RUNNER_PROJECT=<project-that-runs-dataflow>
 export REGION=us-central1
 export BUCKET=<bucket-in-runner-project>       # job spec, staging, and temp
 export SOURCE_BUCKET=<bucket-in-other-project> # source files
-export SECRET=neo4j-connection-info
+export SECRET=<your-secret>
 
 export SA=neo4j-dataflow
 export SA_EMAIL="$SA@$RUNNER_PROJECT.iam.gserviceaccount.com"

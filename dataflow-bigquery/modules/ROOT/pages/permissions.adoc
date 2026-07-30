@@ -31,7 +31,7 @@ export BUCKET=<your-bucket>              # job spec, staging, and temp
 export SOURCE_DATASET=<source-dataset>   # BigQuery dataset holding the source tables
 export TEMP_DATASET=neo4j_import_temp    # BigQuery dataset for query results
 export BQ_LOCATION=US                    # location of SOURCE_DATASET
-export SECRET=neo4j-connection-info
+export SECRET=<your-secret>
 export SA=neo4j-dataflow
 export SA_EMAIL="$SA@$PROJECT.iam.gserviceaccount.com"
 ----
@@ -164,7 +164,7 @@ export BUCKET=<bucket-in-runner-project>
 export SOURCE_DATASET=<dataset-in-data-project>
 export TEMP_DATASET=neo4j_import_temp
 export BQ_LOCATION=US                    # location of SOURCE_DATASET
-export SECRET=neo4j-connection-info
+export SECRET=<your-secret>
 
 export SA=neo4j-dataflow
 export SA_EMAIL="$SA@$RUNNER_PROJECT.iam.gserviceaccount.com"

@@ -172,7 +172,7 @@ Create the secret and add the file as a version:
 [source, bash]
 ----
 export PROJECT=<your-project>
-export SECRET=neo4j-connection-info
+export SECRET=<your-secret>
 
 gcloud secrets create "$SECRET" \
   --project="$PROJECT" \
