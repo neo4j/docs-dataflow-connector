@@ -1,4 +1,4 @@
-= CLI invocations
+= Run an import job (Google Cloud CLI)
 
 You can script execution of Dataflow jobs using the link:https://cloud.google.com/dataflow/docs/guides/templates/using-flex-templates[Google Cloud CLI].
 Executing a job through the CLI is functionally equivalent to using the Dataflow user interface.

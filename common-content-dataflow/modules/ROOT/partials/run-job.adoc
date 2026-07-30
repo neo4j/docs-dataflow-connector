@@ -1,4 +1,4 @@
-= Run an import job
+= Run an import job (UI)
 
 [TIP]
 You can validate your specification file locally via the link:https://github.com/neo4j-contrib/local-dataflow-runner/[Local Dataflow Runner].

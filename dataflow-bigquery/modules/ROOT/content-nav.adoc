@@ -3,7 +3,8 @@
 * xref:permissions.adoc[]
 * xref:job-specification.adoc[]
 * xref:data-type-conversions.adoc[]
-* xref:run-job.adoc[]
-* xref:cli.adoc[]
+* Run an import job
+** xref:run-job.adoc[Dataflow UI]
+** xref:cli.adoc[Google Cloud CLI]
 * xref:least-privilege-setup.adoc[]
 * xref:changelog.adoc[]
