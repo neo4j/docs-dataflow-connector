@@ -1,0 +1,6 @@
+= Data type conversions
+
+Data conversion in the template is two-fold:
+
+1. the source data is converted to a corresponding link:https://beam.apache.org/[Apache Beam] data type
+2. the Beam data is then converted to Neo4j data types

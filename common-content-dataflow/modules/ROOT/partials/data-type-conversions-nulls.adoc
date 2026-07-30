@@ -1,0 +1,3 @@
+For node and relationship targets, assigning Cypher `null` to a non-key property means Neo4j does not store that property. If the property already exists on a matched entity, it is removed. Key property values must not be `null`.
+
+For custom Cypher query targets, `null` values are passed as query parameters; their effect depends on the Cypher query.

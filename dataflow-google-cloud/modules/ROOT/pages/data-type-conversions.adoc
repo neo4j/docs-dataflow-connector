@@ -1,0 +1,88 @@
+include::{common}:partial$data-type-conversions-intro.adoc[]
+
+[#text-types-to-neo4j]
+== Text sources to Neo4j
+
+Text sources include external CSV files and inline text data. Source rows start as nullable Beam `STRING` fields, and target mappings decide how each value is cast.
+
+IMPORTANT: If a mapping omits `target_property_type`, the field is treated as `string`.
+
+[cols="1,1,2,3", options="header"]
+|===
+| `target_property_type`
+| Target Beam type
+| Neo4j parameter value
+| Notes
+
+| omitted, `string`
+| `STRING`
+| Trimmed `String`
+|
+
+| `boolean`
+| `BOOLEAN`
+| `Boolean`
+| `true`, ignoring case, becomes `true`; any other non-null value becomes `false`.
+
+| `integer`
+| `INT64`
+| `Long`
+| Text is parsed with `Long.parseLong()`. Inline numeric values use `Number.longValue()`.
+
+| `float`
+| `DOUBLE`
+| `Double`
+| Text is parsed with `Double.parseDouble()`.
+
+| `byte_array`
+| `BYTES`
+| `byte[]`
+| Valid Base64 text is decoded. If Base64 decoding fails, the raw UTF-8 bytes of the value are used.
+
+| `date`
+| Beam `Date` logical type
+| `java.time.LocalDate`
+| Accepts ISO dates such as `2020-01-01`; ISO date-time values are also accepted and reduced to their date part.
+
+| `local_time`
+| Beam `Time` logical type
+| `java.time.LocalTime`
+| Offset input such as `21:53:59` produces `LocalTime`.
+
+| `zoned_time`
+| Beam `Time` logical type
+| `java.time.OffsetTime`
+| Offset input such as `21:53:59+03:00` produces `OffsetTime`.
+
+| `local_datetime`
+| Beam `DateTime` logical type
+| `java.time.LocalDateTime`
+| Use ISO date-time text such as `2020-01-02T21:53:59.999123456`.
+
+| `zoned_datetime`
+| `Neo4jIsoDateTime` logical type
+| `java.time.ZonedDateTime` or `java.time.OffsetDateTime`
+| Region-zone input such as `2020-01-02T21:53:59+03:00[Europe/Istanbul]` produces `ZonedDateTime`; offset-only input produces `OffsetDateTime`.
+
+| `duration`
+| Beam `NanosDuration` logical type
+| Not supported end to end
+| The text cast parses ISO-8601 duration text such as `PT23H59M59S` to `java.time.Duration`, but the final conversion step currently rejects Beam duration logical values.
+
+| `point`
+| `STRING`
+| `String`
+| The template does not construct Neo4j `Point` values. Use custom Cypher such as `point()` if you need points.
+
+| `<any type>_array`
+| `ARRAY`
+| `null`
+| Array, iterable, map, and row target Beam types are not supported.
+|===
+
+[#null-values]
+== Null values
+
+For text sources, missing values, invalid values, and unsupported text conversions are converted to Cypher `null` values, with a warning in the job logs.
+
+include::{common}:partial$data-type-conversions-nulls.adoc[]
