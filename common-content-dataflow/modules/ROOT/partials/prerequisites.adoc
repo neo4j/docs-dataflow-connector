@@ -122,7 +122,7 @@ The connection file can be uploaded either as a secret to Google Cloud Secret Ma
 2. link:https://console.cloud.google.com/storage/[*Google Cloud Storage*] -- Upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
 
 [TIP]
-Secret Manager is the better choice for anything but experimentation, since the Cloud Storage bucket needs broad write access for staging and every principal that can read it can then read your Neo4j credentials.
+Secret Manager is the best choice for anything but experimentation, since the Cloud Storage bucket needs broad write access for staging and every principal that can read it can then read your Neo4j credentials.
 Either way, the job's service account needs an explicit permission to read the file -- see xref:permissions.adoc#secret-manager[Permissions].
 
 // end::connection-info[]
