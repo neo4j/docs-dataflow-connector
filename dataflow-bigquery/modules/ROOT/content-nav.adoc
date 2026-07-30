@@ -4,4 +4,5 @@
 * xref:job-specification.adoc[]
 * xref:run-job.adoc[]
 * xref:cli.adoc[]
+* xref:least-privilege-setup.adoc[]
 * xref:changelog.adoc[]

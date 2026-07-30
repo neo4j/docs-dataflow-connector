@@ -1,0 +1,12 @@
+:page-toclevels: 2
+
+= Least-privilege setup examples
+
+// tag::intro[]
+These are complete, copy-pasteable setups.
+Each one creates a dedicated service account holding only the roles an import needs, stores the Neo4j credentials in Secret Manager, and launches a job.
+Pick the one that matches how your resources are laid out.
+
+Both assume you already have a job specification ready to upload, as described in xref:job-specification.adoc[].
+xref:permissions.adoc[Permissions] explains what each role is for and lists the Neo4j-side privileges the job needs.
+// end::intro[]

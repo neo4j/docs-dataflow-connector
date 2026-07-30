@@ -30,7 +30,7 @@ where `<secret-id>` has the following structure: `projects/<project>/secrets/<se
 
 [TIP]
 Add `--service-account-email` to run the job as a dedicated service account rather than the Compute Engine default one, which holds the broad `roles/editor` on the project.
-xref:permissions.adoc#quickstart[Permissions] walks through creating such an account with only the roles an import needs.
+xref:least-privilege-setup.adoc#single-project[Least-privilege setup examples] walks through creating such an account with only the roles an import needs.
 
 The REST version looks like this:
 

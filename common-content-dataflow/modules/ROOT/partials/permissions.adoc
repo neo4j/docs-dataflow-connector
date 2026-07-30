@@ -4,6 +4,7 @@
 
 // tag::intro[]
 This page lists the IAM roles a Dataflow import job needs on the Google Cloud side, the privileges it needs on the Neo4j side, and how to grant both with the narrowest scope that still works.
+For end-to-end setups you can copy and paste, see xref:least-privilege-setup.adoc[].
 
 Three identities are involved:
 
@@ -223,6 +224,7 @@ Two different mechanisms get called "impersonation", and conflating them is a co
 - `--service-account-email` is a Dataflow flag. It sets *who the job runs as*. The caller needs `roles/iam.serviceAccountUser` on that service account.
 
 You can use both at once, and for a locked-down setup you usually do: a human or CI identity impersonates a launcher identity, which in turn runs the job as a dedicated worker service account.
+xref:least-privilege-setup.adoc#cross-project-impersonation[Least-privilege setup examples] works through such a setup end to end.
 
 For resources spread across projects, keep the worker service account in the project that runs Dataflow and grant it roles in the projects that hold the data:
 

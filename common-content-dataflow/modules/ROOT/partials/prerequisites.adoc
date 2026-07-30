@@ -147,5 +147,5 @@ image::{common}:image$google-dataflow.jpg[width=400]
 
 [NOTE]
 All Google-related resources (Cloud project, Cloud Storage buckets, Dataflow job) should either belong to the same account, or to one which the Dataflow job has permissions to access.
-See xref:permissions.adoc[Permissions] for the roles the job needs, and for a cross-project setup using service-account impersonation.
+See xref:permissions.adoc[Permissions] for the roles the job needs, and xref:least-privilege-setup.adoc#cross-project-impersonation[Least-privilege setup examples] for a cross-project setup using service-account impersonation.
 // end::dataflow-job[]
