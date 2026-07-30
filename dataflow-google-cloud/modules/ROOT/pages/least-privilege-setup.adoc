@@ -1,0 +1,220 @@
+= Least-privilege setup examples
+
+include::{common}:partial$least-privilege-setup.adoc[tags=intro]
+
+[#single-project]
+== Minimal setup in a single project
+
+This sets up a dedicated service account with only the roles a file-based import needs, stores the Neo4j credentials in Secret Manager, and launches a job.
+Everything lives in one project.
+
+Set your values:
+
+[source, bash]
+----
+export PROJECT=<your-project>
+export REGION=us-central1
+export BUCKET=<your-bucket>          # job spec, source files, staging, and temp
+export SECRET=<your-secret>
+export SA=neo4j-dataflow
+export SA_EMAIL="$SA@$PROJECT.iam.gserviceaccount.com"
+----
+
+Create the service account:
+
+[source, bash]
+----
+gcloud iam service-accounts create "$SA" \
+  --project="$PROJECT" \
+  --display-name="Neo4j Dataflow import"
+----
+
+Grant it the one project-level role it needs:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/dataflow.worker"
+----
+
+Grant bucket access.
+A single bucket holding the job specification, the source files, and the staging and temporary files needs write access, because Dataflow writes to the latter two:
+
+[source, bash]
+----
+gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+----
+
+If your source files live in a separate bucket you do not want the job to write to, split the grants:
+
+[source, bash]
+----
+gcloud storage buckets add-iam-policy-binding "gs://<source-bucket>" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectViewer"
+
+gcloud storage buckets add-iam-policy-binding "gs://<staging-bucket>" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+----
+
+Then create the Neo4j user and role as described in xref:permissions.adoc#neo4j-privileges[Neo4j privileges], put those credentials in `neo4j-connection-info.json` and store it as a secret and grant access:
+
+[source, bash]
+----
+gcloud secrets create "$SECRET" \
+  --project="$PROJECT" \
+  --replication-policy="automatic"
+
+gcloud secrets versions add "$SECRET" \
+  --project="$PROJECT" \
+  --data-file="neo4j-connection-info.json"
+
+gcloud secrets add-iam-policy-binding "$SECRET" \
+  --project="$PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+----
+
+Grant yourself the ability to launch jobs as that service account:
+
+[source, bash]
+----
+gcloud iam service-accounts add-iam-policy-binding "$SA_EMAIL" \
+  --project="$PROJECT" \
+  --member="user:$(gcloud config get-value account)" \
+  --role="roles/iam.serviceAccountUser"
+----
+
+Launch the job:
+
+[source, bash]
+----
+gcloud dataflow flex-template run "gcs-to-neo4j-`date +%Y%m%d-%H%M%S`" \
+  --project="$PROJECT" \
+  --region="$REGION" \
+  --template-file-gcs-location="gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j" \
+  --service-account-email="$SA_EMAIL" \
+  --staging-location="gs://$BUCKET/staging" \
+  --temp-location="gs://$BUCKET/temp" \
+  --parameters jobSpecUri="gs://$BUCKET/jobspec.json" \
+  --parameters neo4jConnectionSecretId="projects/$PROJECT/secrets/$SECRET/versions/latest"
+----
+
+[NOTE]
+The regional endpoint must match the region of the bucket holding your configuration and source files.
+
+[#cross-project-impersonation]
+== Cross-project setup with impersonation
+
+Here Dataflow runs in one project while the source files live in a bucket owned by another, and no human holds the worker service account's privileges directly.
+
+[source, bash]
+----
+export RUNNER_PROJECT=<project-that-runs-dataflow>
+export REGION=us-central1
+export BUCKET=<bucket-in-runner-project>       # job spec, staging, and temp
+export SOURCE_BUCKET=<bucket-in-other-project> # source files
+export SECRET=<your-secret>
+
+export SA=neo4j-dataflow
+export SA_EMAIL="$SA@$RUNNER_PROJECT.iam.gserviceaccount.com"
+export LAUNCHER_SA=neo4j-dataflow-launcher
+export LAUNCHER_EMAIL="$LAUNCHER_SA@$RUNNER_PROJECT.iam.gserviceaccount.com"
+----
+
+Create both service accounts in the runner project:
+
+[source, bash]
+----
+gcloud iam service-accounts create "$SA" \
+  --project="$RUNNER_PROJECT" \
+  --display-name="Neo4j Dataflow import"
+
+gcloud iam service-accounts create "$LAUNCHER_SA" \
+  --project="$RUNNER_PROJECT" \
+  --display-name="Neo4j Dataflow launcher"
+----
+
+The worker service account gets its Dataflow role and its writable bucket in the runner project:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$RUNNER_PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/dataflow.worker"
+
+gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+----
+
+Read access to the source files is granted on the bucket in the owning project.
+Bucket IAM bindings are made on the bucket resource, so no role is needed in that project as a whole:
+
+[source, bash]
+----
+gcloud storage buckets add-iam-policy-binding "gs://$SOURCE_BUCKET" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectViewer"
+----
+
+Wire up the two-step delegation. The launcher service account may act as the worker service account, and you may impersonate the launcher:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$RUNNER_PROJECT" \
+  --member="serviceAccount:$LAUNCHER_EMAIL" \
+  --role="roles/dataflow.developer"
+
+gcloud iam service-accounts add-iam-policy-binding "$SA_EMAIL" \
+  --project="$RUNNER_PROJECT" \
+  --member="serviceAccount:$LAUNCHER_EMAIL" \
+  --role="roles/iam.serviceAccountUser"
+
+gcloud iam service-accounts add-iam-policy-binding "$LAUNCHER_EMAIL" \
+  --project="$RUNNER_PROJECT" \
+  --member="user:$(gcloud config get-value account)" \
+  --role="roles/iam.serviceAccountTokenCreator"
+----
+
+Then create the Neo4j user and role as described in xref:permissions.adoc#neo4j-privileges[Neo4j privileges], put those credentials in `neo4j-connection-info.json` and store it as a secret and grant access:
+
+[source, bash]
+----
+gcloud secrets create "$SECRET" \
+  --project="$RUNNER_PROJECT" \
+  --replication-policy="automatic"
+
+gcloud secrets versions add "$SECRET" \
+  --project="$RUNNER_PROJECT" \
+  --data-file="neo4j-connection-info.json"
+
+gcloud secrets add-iam-policy-binding "$SECRET" \
+  --project="$RUNNER_PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+----
+
+Launch as the launcher service account, running the job as the worker service account:
+
+[source, bash]
+----
+gcloud dataflow flex-template run "gcs-to-neo4j-`date +%Y%m%d-%H%M%S`" \
+  --project="$RUNNER_PROJECT" \
+  --region="$REGION" \
+  --impersonate-service-account="$LAUNCHER_EMAIL" \
+  --template-file-gcs-location="gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j" \
+  --service-account-email="$SA_EMAIL" \
+  --staging-location="gs://$BUCKET/staging" \
+  --temp-location="gs://$BUCKET/temp" \
+  --parameters jobSpecUri="gs://$BUCKET/jobspec.json" \
+  --parameters neo4jConnectionSecretId="projects/$RUNNER_PROJECT/secrets/$SECRET/versions/latest"
+----
+
+No identity in this setup holds more than it needs: you can launch jobs but cannot read the source files or the secret, the launcher can start jobs but not read data, and the worker service account can read the source bucket but cannot write to it or read any other secret.
+
+See xref:permissions.adoc#cross-project[Cross-project setups] for the general rules behind this layout, including Shared VPC.

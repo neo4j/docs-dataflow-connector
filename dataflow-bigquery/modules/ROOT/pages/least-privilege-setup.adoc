@@ -1,0 +1,287 @@
+= Least-privilege setup examples
+
+include::{common}:partial$least-privilege-setup.adoc[tags=intro]
+
+[#single-project]
+== Minimal setup in a single project
+
+This sets up a dedicated service account with only the roles a BigQuery import needs, stores the Neo4j credentials in Secret Manager, and launches a job.
+Everything lives in one project.
+
+Set your values:
+
+[source, bash]
+----
+export PROJECT=<your-project>
+export REGION=us-central1
+export BUCKET=<your-bucket>              # job spec, staging, and temp
+export SOURCE_DATASET=<source-dataset>   # BigQuery dataset holding the source tables
+export TEMP_DATASET=neo4j_import_temp    # BigQuery dataset for query results
+export BQ_LOCATION=US                    # location of SOURCE_DATASET
+export SECRET=<your-secret>
+export SA=neo4j-dataflow
+export SA_EMAIL="$SA@$PROJECT.iam.gserviceaccount.com"
+----
+
+Create the service account:
+
+[source, bash]
+----
+gcloud iam service-accounts create "$SA" \
+  --project="$PROJECT" \
+  --display-name="Neo4j Dataflow import"
+----
+
+Grant it the one project-level role it needs:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/dataflow.worker"
+----
+
+Grant bucket access. The bucket holds the job specification as well as staging and temporary files, so it needs write access:
+
+[source, bash]
+----
+gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+----
+
+Grant BigQuery access. `roles/bigquery.jobUser` is project-level because that is where query jobs are created; read access is scoped to the source dataset:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/bigquery.jobUser"
+
+bq query --project_id="$PROJECT" --use_legacy_sql=false \
+  "GRANT \`roles/bigquery.dataViewer\`
+   ON SCHEMA \`$PROJECT.$SOURCE_DATASET\`
+   TO \"serviceAccount:$SA_EMAIL\""
+----
+
+Create a dataset for query results and grant write access to it alone.
+This is what lets you avoid granting `bigquery.datasets.create` at project level:
+
+[source, bash]
+----
+bq mk --project_id="$PROJECT" --location="$BQ_LOCATION" --dataset "$TEMP_DATASET"
+
+bq query --project_id="$PROJECT" --use_legacy_sql=false \
+  "GRANT \`roles/bigquery.dataEditor\`
+   ON SCHEMA \`$PROJECT.$TEMP_DATASET\`
+   TO \"serviceAccount:$SA_EMAIL\""
+----
+
+[IMPORTANT]
+BigQuery requires the dataset holding query results to be in the **same location as the data being queried**, so `BQ_LOCATION` must match the source dataset's location rather than the Dataflow region.
+Run `bq show --format=prettyjson "$PROJECT:$SOURCE_DATASET"` and read its `location` field if you are unsure.
+
+Reference that dataset from each BigQuery source in your job specification:
+
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "persons",
+  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM movies.persons",
+  "query_temp_dataset": "neo4j_import_temp"
+}
+----
+
+Then create the Neo4j user and role as described in xref:permissions.adoc#neo4j-privileges[Neo4j privileges], put those credentials in `neo4j-connection-info.json` and store it as a secret and grant access:
+
+[source, bash]
+----
+gcloud secrets create "$SECRET" \
+  --project="$PROJECT" \
+  --replication-policy="automatic"
+
+gcloud secrets versions add "$SECRET" \
+  --project="$PROJECT" \
+  --data-file="neo4j-connection-info.json"
+
+gcloud secrets add-iam-policy-binding "$SECRET" \
+  --project="$PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+----
+
+Grant yourself the ability to launch jobs as that service account:
+
+[source, bash]
+----
+gcloud iam service-accounts add-iam-policy-binding "$SA_EMAIL" \
+  --project="$PROJECT" \
+  --member="user:$(gcloud config get-value account)" \
+  --role="roles/iam.serviceAccountUser"
+----
+
+Launch the job:
+
+[source, bash]
+----
+gcloud dataflow flex-template run "bq-to-neo4j-`date +%Y%m%d-%H%M%S`" \
+  --project="$PROJECT" \
+  --region="$REGION" \
+  --template-file-gcs-location="gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j" \
+  --service-account-email="$SA_EMAIL" \
+  --staging-location="gs://$BUCKET/staging" \
+  --temp-location="gs://$BUCKET/temp" \
+  --parameters jobSpecUri="gs://$BUCKET/jobspec.json" \
+  --parameters neo4jConnectionSecretId="projects/$PROJECT/secrets/$SECRET/versions/latest"
+----
+
+
+[#cross-project-impersonation]
+== Cross-project setup with impersonation
+
+Here Dataflow runs in one project while the BigQuery data lives in another, and no human holds the worker service account's privileges directly.
+
+[source, bash]
+----
+export RUNNER_PROJECT=<project-that-runs-dataflow>
+export DATA_PROJECT=<project-that-owns-the-bigquery-data>
+export REGION=us-central1
+export BUCKET=<bucket-in-runner-project>
+export SOURCE_DATASET=<dataset-in-data-project>
+export TEMP_DATASET=neo4j_import_temp
+export BQ_LOCATION=US                    # location of SOURCE_DATASET
+export SECRET=<your-secret>
+
+export SA=neo4j-dataflow
+export SA_EMAIL="$SA@$RUNNER_PROJECT.iam.gserviceaccount.com"
+export LAUNCHER_SA=neo4j-dataflow-launcher
+export LAUNCHER_EMAIL="$LAUNCHER_SA@$RUNNER_PROJECT.iam.gserviceaccount.com"
+----
+
+Create both service accounts in the runner project:
+
+[source, bash]
+----
+gcloud iam service-accounts create "$SA" \
+  --project="$RUNNER_PROJECT" \
+  --display-name="Neo4j Dataflow import"
+
+gcloud iam service-accounts create "$LAUNCHER_SA" \
+  --project="$RUNNER_PROJECT" \
+  --display-name="Neo4j Dataflow launcher"
+----
+
+The worker service account gets its Dataflow, bucket, and job-creation roles in the runner project, exactly as in the <<single-project,single-project example>>:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$RUNNER_PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/dataflow.worker"
+
+gcloud projects add-iam-policy-binding "$RUNNER_PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/bigquery.jobUser"
+
+gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+----
+
+Read access is granted in the data project, on the source dataset only:
+
+[source, bash]
+----
+bq query --project_id="$DATA_PROJECT" --use_legacy_sql=false \
+  "GRANT \`roles/bigquery.dataViewer\`
+   ON SCHEMA \`$DATA_PROJECT.$SOURCE_DATASET\`
+   TO \"serviceAccount:$SA_EMAIL\""
+----
+
+Keep the dataset for query results in the runner project, so the data project grants read access and nothing more.
+It still has to sit in the same BigQuery location as the source data, even though it is in a different project:
+
+[source, bash]
+----
+bq mk --project_id="$RUNNER_PROJECT" --location="$BQ_LOCATION" --dataset "$TEMP_DATASET"
+
+bq query --project_id="$RUNNER_PROJECT" --use_legacy_sql=false \
+  "GRANT \`roles/bigquery.dataEditor\`
+   ON SCHEMA \`$RUNNER_PROJECT.$TEMP_DATASET\`
+   TO \"serviceAccount:$SA_EMAIL\""
+----
+
+Because the source and the temporary dataset are now in different projects, the source must name both:
+
+[source, json]
+----
+{
+  "type": "bigquery",
+  "name": "persons",
+  "query": "SELECT person_tmdbId, name, bornIn, born, died FROM <data-project>.movies.persons",
+  "query_temp_project": "<runner-project>",
+  "query_temp_dataset": "neo4j_import_temp"
+}
+----
+
+[IMPORTANT]
+If you set `query_temp_project` you must also set `query_temp_dataset`, or the job fails validation with `DFBQ-001`.
+
+Wire up the two-step delegation. The launcher service account may act as the worker service account, and you may impersonate the launcher:
+
+[source, bash]
+----
+gcloud projects add-iam-policy-binding "$RUNNER_PROJECT" \
+  --member="serviceAccount:$LAUNCHER_EMAIL" \
+  --role="roles/dataflow.developer"
+
+gcloud iam service-accounts add-iam-policy-binding "$SA_EMAIL" \
+  --project="$RUNNER_PROJECT" \
+  --member="serviceAccount:$LAUNCHER_EMAIL" \
+  --role="roles/iam.serviceAccountUser"
+
+gcloud iam service-accounts add-iam-policy-binding "$LAUNCHER_EMAIL" \
+  --project="$RUNNER_PROJECT" \
+  --member="user:$(gcloud config get-value account)" \
+  --role="roles/iam.serviceAccountTokenCreator"
+----
+
+Then create the Neo4j user and role as described in xref:permissions.adoc#neo4j-privileges[Neo4j privileges], put those credentials in `neo4j-connection-info.json` and store it as a secret and grant access.
+The secret can live in either project; this keeps it with the job:
+
+[source, bash]
+----
+gcloud secrets create "$SECRET" \
+  --project="$RUNNER_PROJECT" \
+  --replication-policy="automatic"
+
+gcloud secrets versions add "$SECRET" \
+  --project="$RUNNER_PROJECT" \
+  --data-file="neo4j-connection-info.json"
+
+gcloud secrets add-iam-policy-binding "$SECRET" \
+  --project="$RUNNER_PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+----
+
+Launch as the launcher service account, running the job as the worker service account:
+
+[source, bash]
+----
+gcloud dataflow flex-template run "bq-to-neo4j-`date +%Y%m%d-%H%M%S`" \
+  --project="$RUNNER_PROJECT" \
+  --region="$REGION" \
+  --impersonate-service-account="$LAUNCHER_EMAIL" \
+  --template-file-gcs-location="gs://dataflow-templates/latest/flex/Google_Cloud_to_Neo4j" \
+  --service-account-email="$SA_EMAIL" \
+  --staging-location="gs://$BUCKET/staging" \
+  --temp-location="gs://$BUCKET/temp" \
+  --parameters jobSpecUri="gs://$BUCKET/jobspec.json" \
+  --parameters neo4jConnectionSecretId="projects/$RUNNER_PROJECT/secrets/$SECRET/versions/latest"
+----
+
+No identity in this setup holds more than it needs: you can launch jobs but cannot read the data or the secret, the launcher can start jobs but not read data, and the worker service account can read the source dataset but cannot create datasets or read any other secret.
+
+See xref:permissions.adoc#cross-project[Cross-project setups] for the general rules behind this layout, including Shared VPC.

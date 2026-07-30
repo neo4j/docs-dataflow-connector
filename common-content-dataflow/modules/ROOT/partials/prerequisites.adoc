@@ -121,6 +121,10 @@ The connection file can be uploaded either as a secret to Google Cloud Secret Ma
 1. link:https://console.cloud.google.com/security/secret-manager[*Google Secret Manager*] -- Create a new secret and upload the `neo4j-connection-info.json` file as value.
 2. link:https://console.cloud.google.com/storage/[*Google Cloud Storage*] -- Upload the `neo4j-connection-info.json` file to your Cloud Storage bucket.
 
+[TIP]
+Secret Manager is the best choice for anything but experimentation, since the Cloud Storage bucket needs broad write access for staging and every principal that can read it can then read your Neo4j credentials.
+Either way, the job's service account needs an explicit permission to read the file -- see xref:permissions.adoc#secret-manager[Permissions].
+
 // end::connection-info[]
 
 
@@ -143,4 +147,5 @@ image::{common}:image$google-dataflow.jpg[width=400]
 
 [NOTE]
 All Google-related resources (Cloud project, Cloud Storage buckets, Dataflow job) should either belong to the same account, or to one which the Dataflow job has permissions to access.
+See xref:permissions.adoc[Permissions] for the roles the job needs, and xref:least-privilege-setup.adoc#cross-project-impersonation[Least-privilege setup examples] for a cross-project setup using service-account impersonation.
 // end::dataflow-job[]

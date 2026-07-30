@@ -1,0 +1,349 @@
+:page-toclevels: 3
+
+= Permissions
+
+// tag::intro[]
+This page lists the IAM roles a Dataflow import job needs on the Google Cloud side, the privileges it needs on the Neo4j side, and how to grant both with the narrowest scope that still works.
+For end-to-end setups you can copy and paste, see xref:least-privilege-setup.adoc[].
+
+Three identities are involved:
+
+- **The launching identity** -- the user account or service account that submits the job, either from the Dataflow console or through `gcloud`.
+- **The Dataflow worker service account** -- the identity the job itself runs as. Set it with `--service-account-email`; if you omit it, Dataflow uses the link:https://cloud.google.com/compute/docs/access/service-accounts#default_service_account[Compute Engine default service account], which typically holds the broad `roles/editor` on the project. Creating a dedicated service account is the single biggest reduction in privilege you can make.
+- **The Dataflow service agent** -- `service-<project-number>@dataflow-service-producer-prod.iam.gserviceaccount.com`. Google Cloud creates it and grants it `roles/dataflow.serviceAgent` automatically, so there is normally nothing to do. It only needs attention for Shared VPC (see <<shared-vpc>>).
+// end::intro[]
+
+
+// tag::stages[]
+[#stages]
+== Which stage needs which access
+
+A job runs in three stages.
+The middle one is the least obvious: the template builds its pipeline on a **launcher VM**, and that VM does more than assemble a job graph -- it resolves the Neo4j credentials and talks to Neo4j directly.
+
+[cols="1,1,3", options="header"]
+|===
+| Stage
+| Runs as
+| What it accesses
+
+| Launch call
+| The launching identity
+| Submits the job to the Dataflow service.
+
+| Launcher VM +
+(pipeline construction)
+| The worker service account
+| Reads the job specification from Cloud Storage. Resolves the Neo4j connection metadata, from Secret Manager or Cloud Storage. Connects to Neo4j to verify connectivity, apply `reset_db`, and create all constraints and indexes.
+
+| Worker VMs
+| The worker service account
+| Read the source data. Connect to Neo4j to write nodes and relationships.
+|===
+
+The launcher VM uses the **same service account and the same network** as the worker VMs.
+Two consequences follow:
+
+- Secret Manager access is a launcher requirement, not a worker requirement. A missing binding fails the job at submission, before any worker starts.
+- Neo4j must be reachable from the subnetwork the job runs in at launch time, not just once workers are up. A job whose workers could reach Neo4j but whose launcher could not would never get as far as reading data.
+// end::stages[]
+
+
+// tag::launch-identity[]
+[#launch-identity]
+== Roles for the launching identity
+
+Grant these at project level to whoever, or whatever, submits jobs:
+
+[cols="1,3", options="header"]
+|===
+| Role
+| Why
+
+| `roles/dataflow.developer`
+| Create, inspect, and cancel Dataflow jobs. `roles/dataflow.admin` also works and is broader.
+
+| `roles/iam.serviceAccountUser` +
+(on the worker service account)
+| Grants `iam.serviceAccounts.actAs`, without which Dataflow refuses to run the job as the service account you named in `--service-account-email`. Bind this on the service account resource, not on the project.
+|===
+
+[NOTE]
+The launching identity does not need access to the Cloud Storage bucket, the source data, the secret, or Neo4j. Everything the job reads, it reads as the worker service account. This is what makes it practical to let a CI pipeline trigger imports without giving it access to the data.
+// end::launch-identity[]
+
+
+// tag::worker-sa[]
+[#worker-sa]
+== Roles for the worker service account
+
+=== Dataflow
+
+`roles/dataflow.worker`, at project level. This is the only project-level role the job itself requires.
+
+=== Cloud Storage
+
+Dataflow does not only read from your bucket. It writes the staged pipeline, and it writes temporary files while the job runs, so `roles/storage.objectViewer` alone is not sufficient.
+
+[cols="1,1,2", options="header"]
+|===
+| Bucket
+| Role
+| Why
+
+| The bucket holding the job specification and connection metadata
+| `roles/storage.objectViewer`
+| Read the configuration files.
+
+| The staging and temp bucket (`--staging-location`, `--temp-location`)
+| `roles/storage.objectAdmin`
+| Write, read back, and clean up staged and temporary files.
+|===
+
+If you keep everything in one bucket, grant `roles/storage.objectAdmin` on that bucket and nothing else.
+Bind these at the bucket, not at the project.
+
+[IMPORTANT]
+If the connection metadata is stored as a plain JSON file in the bucket rather than in Secret Manager, then every principal that can read that bucket can read your Neo4j credentials -- and the staging bucket needs broad write access anyway. Prefer Secret Manager; see <<secret-manager>>.
+// end::worker-sa[]
+
+
+// tag::text-source[]
+=== Source files
+
+`roles/storage.objectViewer` on each bucket holding source files.
+If the source files live in the same bucket as the configuration, the grant above already covers them.
+// end::text-source[]
+
+
+// tag::bq-source[]
+=== BigQuery sources
+
+The template reads a BigQuery source by running your `query` as a BigQuery query job and then exporting the results, so read access to the source tables is only part of what it needs.
+
+[cols="1,1,2", options="header"]
+|===
+| Scope
+| Role
+| Why
+
+| The project the job runs in
+| `roles/bigquery.jobUser`
+| Grants `bigquery.jobs.create`. The template issues at least two query jobs per source: a `LIMIT 0` job to resolve the schema, and the query itself.
+
+| The dataset holding the source tables
+| `roles/bigquery.dataViewer`
+| Grants `bigquery.tables.getData` and `bigquery.tables.export`.
+
+| A dataset for query results
+| `roles/bigquery.dataEditor`
+| The results of your query are materialised into a temporary table before they are read. See below.
+|===
+
+Query results have to land somewhere.
+By default the template lets BigQuery create a dataset for them, which requires the `bigquery.datasets.create` permission at project level -- a permission `roles/bigquery.jobUser` does *not* grant.
+
+To avoid granting it, create one dataset up front and point the source at it with xref:job-specification.adoc#sources[`query_temp_dataset`], adding `query_temp_project` if that dataset lives in another project.
+The service account then needs `roles/bigquery.dataEditor` on that one dataset and nothing broader.
+
+[NOTE]
+Because the default read path exports the temporary table to Cloud Storage before workers read it, a BigQuery source also depends on the temp bucket write access described above.
+// end::bq-source[]
+
+
+// tag::bq-action[]
+=== BigQuery actions
+
+xref:job-specification.adoc#actions[BigQuery actions] execute their SQL on the worker VMs, against the project the job runs in.
+They need `roles/bigquery.jobUser`, plus whatever the SQL itself touches: `roles/bigquery.dataViewer` to read, `roles/bigquery.dataEditor` to write.
+
+Action SQL is not restricted by the template, so scope these grants to the specific datasets the action uses.
+// end::bq-action[]
+
+
+// tag::secret-manager[]
+[#secret-manager]
+== Store the Neo4j credentials in Secret Manager
+
+The connection metadata file described in xref:prerequisites.adoc[Prerequisites] contains a password, token, or credentials.
+Storing it in Secret Manager keeps it out of Cloud Storage, where the staging bucket's access pattern would otherwise expose it.
+
+Create the secret and add the file as a version:
+
+[source, bash]
+----
+export PROJECT=<your-project>
+export SECRET=<your-secret>
+
+gcloud secrets create "$SECRET" \
+  --project="$PROJECT" \
+  --replication-policy="automatic"
+
+gcloud secrets versions add "$SECRET" \
+  --project="$PROJECT" \
+  --data-file="neo4j-connection-info.json"
+----
+
+Grant the worker service account access to that one secret:
+
+[source, bash]
+----
+export SA_EMAIL=<worker-service-account-email>
+
+gcloud secrets add-iam-policy-binding "$SECRET" \
+  --project="$PROJECT" \
+  --member="serviceAccount:$SA_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+----
+
+`roles/secretmanager.secretAccessor` contains `secretmanager.versions.access`, which is the only Secret Manager permission the template uses.
+Bind it on the secret rather than on the project, so the service account cannot read any other secret.
+
+Pass the secret to the job as `neo4jConnectionSecretId`, in the form `projects/<project>/secrets/<secret>/versions/<version>`.
+The template rejects any other form with:
+
+----
+Provided Secret must be in the form projects/{project}/secrets/{secret}/versions/{secret_version}
+----
+
+`latest` is accepted as the version.
+Pinning a numbered version instead means a rotated secret cannot change the behaviour of a running or re-run job without an explicit change to the job parameters.
+
+[NOTE]
+The secret is resolved on the launcher VM, so a missing binding fails the job during submission rather than partway through the import.
+// end::secret-manager[]
+
+
+// tag::cross-project[]
+[#cross-project]
+== Cross-project setups
+
+Two different mechanisms get called "impersonation", and conflating them is a common source of confusion:
+
+- `--impersonate-service-account` is a link:https://cloud.google.com/sdk/gcloud/reference#--impersonate-service-account[`gcloud`-wide flag]. It changes *who makes the launch call*. The caller needs `roles/iam.serviceAccountTokenCreator` on the service account being impersonated.
+- `--service-account-email` is a Dataflow flag. It sets *who the job runs as*. The caller needs `roles/iam.serviceAccountUser` on that service account.
+
+You can use both at once, and for a locked-down setup you usually do: a human or CI identity impersonates a launcher identity, which in turn runs the job as a dedicated worker service account.
+xref:least-privilege-setup.adoc#cross-project-impersonation[Least-privilege setup examples] works through such a setup end to end.
+
+For resources spread across projects, keep the worker service account in the project that runs Dataflow and grant it roles in the projects that hold the data:
+
+[cols="1,2", options="header"]
+|===
+| Resource
+| Grant to the worker service account
+
+| Dataflow, staging and temp bucket
+| In the project that runs the job.
+
+| Source datasets, tables, or buckets in another project
+| `roles/bigquery.dataViewer` or `roles/storage.objectViewer`, bound on the dataset or bucket in the owning project. `roles/bigquery.jobUser` stays in the project that runs the job, because that is where the query job is created.
+
+| A secret in another project
+| `roles/secretmanager.secretAccessor`, bound on the secret in the owning project.
+|===
+
+[#shared-vpc]
+=== Shared VPC
+
+If the job runs on a subnetwork owned by a host project, the **Dataflow service agent** of the project running the job needs `roles/compute.networkUser` on that subnetwork in the host project.
+This is the one binding that applies to the service agent rather than to the worker service account, which is why it is easy to miss.
+// end::cross-project[]
+
+
+// tag::neo4j[]
+[#neo4j-privileges]
+== Neo4j privileges
+
+On the Neo4j side, the template needs to write data *and* manage schema, because it creates the constraints and indexes declared by your node and relationship targets.
+
+`architect` is the least-privileged link:{neo4j-docs-base-uri}/operations-manual/current/authentication-authorization/built-in-roles/[built-in role] that covers this: it is the first one to include `CONSTRAINT MANAGEMENT` and `INDEX MANAGEMENT`.
+`publisher` is enough only if you pre-create every constraint and index yourself.
+
+To scope privileges to a single database rather than all of them, create a custom role equivalent to `architect` on that database:
+
+[source, cypher]
+----
+CREATE ROLE dataflow_importer;
+
+GRANT ACCESS ON DATABASE neo4j TO dataflow_importer;
+GRANT MATCH {*} ON GRAPH neo4j TO dataflow_importer;
+GRANT WRITE ON GRAPH neo4j TO dataflow_importer;
+GRANT NAME MANAGEMENT ON DATABASE neo4j TO dataflow_importer;
+GRANT CONSTRAINT MANAGEMENT ON DATABASE neo4j TO dataflow_importer;
+GRANT INDEX MANAGEMENT ON DATABASE neo4j TO dataflow_importer;
+
+CREATE USER dataflow SET PASSWORD '<password>' CHANGE NOT REQUIRED;
+GRANT ROLE dataflow_importer TO dataflow;
+----
+
+`NAME MANAGEMENT` is required: without it the user cannot introduce the labels, relationship types, and property keys your targets declare, which is why `editor` is not sufficient.
+
+[IMPORTANT]
+====
+**Insufficient schema privileges do not fail the job.**
+The template logs each failed constraint or index statement and carries on, so an import can finish reporting success while leaving the graph without the constraints and indexes the specification declared -- and without the performance the import relied on them for.
+
+If constraints or indexes are missing after a successful run, search the launcher log for `Error executing cypher`.
+====
+
+=== Additional privileges for some features
+
+[cols="1,2", options="header"]
+|===
+| Feature
+| Additional privileges
+
+| xref:job-specification.adoc#configuration[`reset_db: true`]
+| The reset first tries `CREATE OR REPLACE DATABASE`, which needs the DBMS-level `CREATE DATABASE` and `DROP DATABASE` privileges held by `admin`. Without them it falls back to deleting all nodes and relationships and dropping constraints and indexes, which the role above already covers. Like schema creation, a failed reset is logged rather than fatal.
+
+| Custom Cypher query targets, Cypher actions
+| Whatever the Cypher does. The template does not constrain these statements, so the role has to cover them.
+|===
+
+[NOTE]
+====
+Custom roles and users require Neo4j Enterprise Edition, AuraDB Business Critical, or AuraDB Virtual Dedicated Cloud.
+
+On other Aura tiers, and on Community Edition, use the `neo4j` user. Community Edition has no custom roles, and as noted in xref:prerequisites.adoc[Prerequisites] it also creates far fewer constraints.
+====
+// end::neo4j[]
+
+
+// tag::troubleshooting[]
+[#troubleshooting]
+== Troubleshooting
+
+[cols="2,3", options="header"]
+|===
+| Symptom
+| Cause and fix
+
+| `Permission 'secretmanager.versions.access' denied on resource ...`
+| The worker service account has no `roles/secretmanager.secretAccessor` binding on the secret. Remember that the launcher reads it, so this fails at submission. See <<secret-manager>>.
+
+| `Provided Secret must be in the form projects/\{project}/secrets/\{secret}/versions/\{secret_version}`
+| `neo4jConnectionSecretId` is missing the `/versions/<version>` suffix. Append `/versions/latest`.
+
+| `caller does not have permission` or `iam.serviceAccounts.actAs` denied at launch
+| The launching identity lacks `roles/iam.serviceAccountUser` on the service account named in `--service-account-email`. See <<launch-identity>>.
+
+| Job fails writing to the staging or temp location
+| `roles/storage.objectViewer` was granted where write access is needed. See <<worker-sa>>.
+
+| `User does not have bigquery.jobs.create permission`
+| Grant `roles/bigquery.jobUser` in the project that runs the job, not in the project that owns the data.
+
+| `Permission bigquery.datasets.create denied`
+| A BigQuery source is trying to create a dataset for its query results. Create one up front and set `query_temp_dataset`, with `roles/bigquery.dataEditor` on it.
+
+| `Not found: Dataset ... was not found in location ...`, or a location mismatch on a BigQuery source
+| The dataset named by `query_temp_dataset` is in a different BigQuery location from the data being queried. Both must match; neither has to match the Dataflow region.
+
+| Job succeeds, but constraints and indexes are missing
+| The Neo4j user lacks `CONSTRAINT MANAGEMENT` or `INDEX MANAGEMENT`. These failures are logged, not fatal. Search the launcher log for `Error executing cypher`. See <<neo4j-privileges>>.
+
+| Launcher cannot reach Neo4j, though the network looks correct
+| The launcher VM connects to Neo4j itself, on the same subnetwork as the workers. Confirm the route from that subnetwork, not just from the workers. See <<stages>>.
+|===
+// end::troubleshooting[]

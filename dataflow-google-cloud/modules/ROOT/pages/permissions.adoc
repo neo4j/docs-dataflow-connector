@@ -1,0 +1,21 @@
+= Permissions
+
+include::{common}:partial$permissions.adoc[tags=intro]
+
+include::{common}:partial$permissions.adoc[tags=stages]
+
+include::{common}:partial$permissions.adoc[tags=launch-identity]
+
+include::{common}:partial$permissions.adoc[tags=worker-sa]
+
+include::{common}:partial$permissions.adoc[tags=text-source]
+
+include::{common}:partial$permissions.adoc[tags=bq-action]
+
+include::{common}:partial$permissions.adoc[tags=secret-manager]
+
+include::{common}:partial$permissions.adoc[tags=cross-project]
+
+include::{common}:partial$permissions.adoc[tags=neo4j]
+
+include::{common}:partial$permissions.adoc[tags=troubleshooting]
