@@ -44,6 +44,8 @@ asciidoc:
   - "@neo4j-antora/antora-add-notes"
   - "@neo4j-antora/mark-terms"
   attributes:
+    page-tabs: drivers-apis@
+    page-tabs-index: 100
     page-theme: docs
     page-type: Docs
     page-search-type: Docs
