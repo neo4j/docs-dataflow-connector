@@ -143,7 +143,7 @@ The link:https://console.cloud.google.com/dataflow[Google Dataflow] job glues al
 You need to craft a _job specification_ file to provide Dataflow with all the information it needs to load the data into Neo4j.
 
 [.shadow]
-image::{common}:image$google-dataflow.jpg[width=400]
+image::{common}:image$google-dataflow.jpg["Diagram of the Google Cloud to Neo4j Dataflow Flex Template: file and SQL data sources feed into Google Dataflow, which uses a job specification to import the data into Neo4j",width=400]
 
 [NOTE]
 All Google-related resources (Cloud project, Cloud Storage buckets, Dataflow job) should either belong to the same account, or to one which the Dataflow job has permissions to access.
