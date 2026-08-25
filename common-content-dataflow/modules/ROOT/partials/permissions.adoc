@@ -345,5 +345,8 @@ On other Aura tiers, and on Community Edition, use the `neo4j` user. Community E
 
 | Launcher cannot reach Neo4j, though the network looks correct
 | The launcher VM connects to Neo4j itself, on the same subnetwork as the workers. Confirm the route from that subnetwork, not just from the workers. See <<stages>>.
+
+| With `reset_db: true`, the job graph shows no steps until the database reset finishes
+| Expected behaviour. The reset runs as the first stage in the driver program, just before the Beam pipeline is built and work is spread across workers. Nothing appears in the job graph until it completes, because the pipeline has not been constructed yet. On a large database this can take a while, so the graph may show up quite late in the job view.
 |===
 // end::troubleshooting[]
