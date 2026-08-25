@@ -7,7 +7,9 @@ You can use the template for both first-time and incremental imports.
 [IMPORTANT]
 ====
 This template runs as a *batch* Dataflow job, not a streaming one.
-Each run executes each source SQL query at most once per target, against a point-in-time snapshot of the BigQuery data. Sources do not read from a BigQuery change stream nor do they continuously ingest new data.
+Each run executes each source SQL query at most once per target, against a point-in-time snapshot of the BigQuery data. 
+Sources do not read from a BigQuery change stream nor do they continuously ingest new data.
+
 "Incremental imports" above means re-running the job with a query that selects new or changed rows, not continuous or real-time ingestion.
 To keep Neo4j up to date, schedule the job to run on a recurring basis (for example with Cloud Scheduler).
 ====
