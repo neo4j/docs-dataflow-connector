@@ -1,0 +1,34 @@
+= Transactions, retries, and partial failures
+
+include::{common}:partial$transactions.adoc[tags=intro]
+
+include::{common}:partial$transactions.adoc[tags=model]
+
+include::{common}:partial$transactions.adoc[tags=ordering]
+
+include::{common}:partial$transactions.adoc[tags=partial-failures]
+
+include::{common}:partial$transactions.adoc[tags=retries]
+
+include::{common}:partial$transactions.adoc[tags=merge-safety]
+
+[#bad-rows]
+== Rows that fail before Neo4j
+
+The template has no dead-letter queue: rows that cannot be imported are not written to a Cloud Storage error file for later inspection.
+A row either reaches Neo4j, is dropped with a log entry, or fails its bundle.
+
+For text sources:
+
+- A line that is empty, or that has fewer fields than the source declares, is skipped with an error in the job logs, and the rest of the job continues.
+Nothing else records that the row was lost, so check the logs before treating a successful job as a complete import.
+- A value that cannot be cast to the type given by `target_property_type` becomes Cypher `null`, with a warning in the job logs.
+For a non-key property this means the property is not stored; for a key property, the write fails.
+See xref:data-type-conversions.adoc[] for the conversion rules.
+- Rows that violate a constraint fail their batch, and therefore the whole bundle, and after the <<bundle-retries,bundle retries>> the job.
+
+Because bad rows are either dropped silently or fatal, validate the data before the import, or filter it with the `where` attribute of a xref:job-specification.adoc#source-transformations[source transformation].
+
+include::{common}:partial$transactions.adoc[tags=memory]
+
+include::{common}:partial$transactions.adoc[tags=checklist]

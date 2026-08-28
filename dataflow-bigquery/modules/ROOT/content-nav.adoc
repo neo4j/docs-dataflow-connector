@@ -2,6 +2,7 @@
 * xref:prerequisites.adoc[]
 * xref:job-specification.adoc[]
 * xref:data-type-conversions.adoc[]
+* xref:transactions.adoc[]
 * Run an import job
 ** xref:run-job.adoc[Dataflow UI]
 ** xref:cli.adoc[Google Cloud CLI]
