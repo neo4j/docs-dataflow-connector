@@ -1,0 +1,239 @@
+= Transactions, retries, and partial failures
+
+tag::intro[]
+
+An import job is not a single transaction.
+The template splits every target into many independent transactions, so a job that fails halfway through leaves behind whatever it had already committed.
+This page explains how the splitting works, what the template retries on your behalf, and what you must do to make a re-run safe.
+
+end::intro[]
+
+
+tag::model[]
+
+[#transaction-model]
+== Transaction model
+
+Each target (node, relationship, or custom query) is written by its own step in the Dataflow pipeline.
+Within a step, the template:
+
+1. assigns every source row a random bucket number, between `0` and the target's parallelism setting minus one;
+2. groups the rows of each bucket into batches of the target's batch size;
+3. opens one Neo4j write transaction per batch, runs a single Cypher statement with the batch bound to the `$rows` parameter, and commits.
+
+Node and relationship targets use a generated statement that starts with `UNWIND $rows AS row`, followed by `CREATE` or `MERGE` depending on the target's `write_mode`.
+Custom query targets receive the same `$rows` list and run the query you wrote.
+
+For example, a node target importing 1 million rows with a batch size of `5000` commits around 200 independent transactions, and the parallelism setting caps how many of them can be in flight at once for that target.
+
+[NOTE]
+====
+There is no enclosing transaction around a job, a source, or a target, and no coordination between batches.
+Each batch commits on its own and becomes visible to other clients immediately.
+====
+
+The template therefore cannot offer all-or-nothing imports.
+Batch size and parallelism are not only throughput settings: they also determine how much work a single failure can lose or duplicate.
+Both are set per target type in the `config` object; see xref:job-specification.adoc#configuration[Configuration] for the settings and their defaults.
+
+[IMPORTANT]
+====
+Buckets are assigned at random, not by the properties you merge on.
+Two batches of the same target can process rows with the same key at the same time, which is what makes constraints necessary (see <<merge-safety>>).
+Raising a parallelism setting increases both throughput and the chance of that overlap.
+====
+
+Older job specifications may use the settings `node_write_batch_size`, `edge_write_batch_size`, `custom_query_batch_size`, `node_write_parallelism`, `edge_write_parallelism`, and `custom_query_parallelism`.
+The template still accepts those names, but prefer the current ones.
+
+end::model[]
+
+
+tag::ordering[]
+
+[#target-order]
+== Order of writes
+
+You do not need to run separate jobs for nodes and relationships.
+The template derives a dependency graph from the job specification and schedules the targets accordingly:
+
+- A relationship target waits for the node targets it references as start and end nodes, so its endpoints exist by the time it runs.
+- Relationship targets that share a start or end node target are serialized with each other, so they never lock the same endpoints concurrently.
+- Node targets that are independent of each other can run at the same time, and so can relationship targets with no node target in common.
+- A custom query target waits only for its source, for any target listed in its `depends_on`, and for the actions of the relevant stage.
+It is *not* automatically scheduled after all nodes and relationships.
+If your query assumes imported entities already exist, declare that with `depends_on`.
+
+Indexes and constraints declared in a target's `schema` object are created before that target's rows are written.
+
+[WARNING]
+====
+If a schema statement fails, the error is logged and the import continues without that index or constraint.
+A `MERGE`-based import that relies on a constraint for correctness then runs unprotected.
+Check the job logs for schema errors, or create the constraints ahead of the job.
+====
+
+end::ordering[]
+
+
+tag::partial-failures[]
+
+[#partial-failures]
+== Partial failures
+
+When a job fails, the data it already wrote stays in the database:
+
+- Batches committed before the failure are *not* rolled back.
+- The batch in flight when the error was raised is rolled back, so a batch applies either fully or not at all.
+- Other targets, and other buckets of the same target, keep writing until they finish or fail on their own.
+
+What remains is an arbitrary subset of each target's rows, with nothing recording where each one stopped.
+Re-running the job sends the rows that already landed a second time.
+
+[WARNING]
+====
+Never treat a failed job as a no-op.
+Before re-running, either make the import idempotent (see <<merge-safety>>) or clean up what the previous attempt committed.
+====
+
+end::partial-failures[]
+
+
+tag::retries[]
+
+[#retries]
+== Retry behavior
+
+The job specification has no retry settings.
+Retries happen at two levels instead, and they differ in what they replay.
+
+[#driver-retries]
+=== Neo4j driver retries a single batch
+
+Each batch runs as a managed transaction of the Neo4j Java driver.
+If the batch fails with an error the driver considers transient, the driver rolls it back and re-runs *that batch only*, with exponential backoff, until it succeeds or its retry window (30 seconds by default) is exhausted.
+
+Errors handled this way include:
+
+- lost connections to the server;
+- session expiry, for example after a cluster leader switch;
+- transient errors, notably deadlocks (`Neo.TransientError.Transaction.DeadlockDetected`) and lock acquisition failures, which are what excessive write parallelism produces;
+- authentication token refresh errors.
+
+A moderate amount of lock contention is absorbed here, at the cost of throughput.
+Because the retry window is fixed, heavy contention cannot be solved by raising a retry count; reduce parallelism instead.
+
+[#bundle-retries]
+=== Dataflow retries a whole bundle
+
+When the driver gives up, the exception propagates and Dataflow retries the bundle of elements it was processing.
+In batch mode, a failing bundle is retried four times before the job fails, and this threshold cannot be configured.
+See link:https://cloud.google.com/dataflow/docs/pipeline-lifecycle#error_and_exception_handling[Dataflow -> Pipeline lifecycle] for details.
+
+A bundle retry re-sends rows to Neo4j, including rows from batches that a previous attempt had already committed.
+Unless the write is idempotent, those rows are written twice.
+
+[#indeterminate-commits]
+=== Retries can duplicate data
+
+A retry is only safe if the failed batch had not already been applied, and that is not always knowable.
+If the connection drops while a commit is in flight, the server may have committed the transaction and been unable to report it.
+The driver treats that as retryable and writes the batch again.
+
+The outcome depends on how the target is configured:
+
+[cols="1,2", options="header"]
+|===
+| Target configuration
+| Effect of a retry
+
+| `"write_mode": "merge"` with a key or uniqueness constraint on the merged properties
+| Safe. The retry matches what the first attempt wrote and updates it.
+
+| `"write_mode": "merge"` without such a constraint
+| Duplicates are possible, because `MERGE` may not see a concurrently written entity.
+
+| `"write_mode": "create"`
+| Duplicate nodes or relationships, always. `CREATE` has no notion of an existing row.
+
+| Custom query target
+| Depends entirely on the query. Only an idempotent query survives a retry.
+|===
+
+end::retries[]
+
+
+tag::merge-safety[]
+
+[#merge-safety]
+== Making writes idempotent
+
+Because both retry levels replay rows, an import that can be re-run safely needs `"write_mode": "merge"` *and* a constraint on the properties it merges on.
+
+[#merge-constraints]
+=== MERGE without a constraint can duplicate
+
+`MERGE` performs a match and, if nothing matches, a create.
+Nothing makes that pair atomic across concurrent transactions unless a key or uniqueness constraint exists on the merged properties.
+Two batches merging the same key at the same time can both fail to match and both create, leaving two entities and no error.
+
+This is the most common cause of silent duplication: the job succeeds, the row counts look right, and the graph has duplicates.
+
+[TIP]
+Declare `key_constraints` or `unique_constraints` in the target's `schema` object so the template creates them before that target's rows are written, or create them in the database ahead of the job.
+
+[#merge-contention]
+=== MERGE with a constraint contends for locks
+
+A constraint makes `MERGE` correct, not contention-free.
+To enforce the constraint, Neo4j locks the merged key, so concurrent batches touching the same or related keys serialize against each other, and past a certain amount of parallelism fail with deadlock or lock acquisition errors.
+
+Those errors are retryable, so some contention is invisible.
+Heavy contention exhausts the driver's retry window and fails the bundle.
+
+Relationship writes lock both endpoint nodes, which is why `relationship_target_parallelism` defaults to `1`.
+Raise it only when you know the endpoints written by that target do not overlap.
+
+[#node-match-mode]
+=== Missing endpoints
+
+`node_match_mode` decides what a relationship target does when an endpoint is not in the database:
+
+- `match` skips the row, so the relationship is silently not created.
+- `merge` creates the missing endpoint, which can produce nodes with only their key properties set if the corresponding node target failed or was filtered out.
+
+end::merge-safety[]
+
+
+tag::memory[]
+
+[#batch-memory]
+== Keep per-row work bounded
+
+A batch is a single transaction, and its working set must fit in the server's heap.
+Statements that expand the work done per row can make an otherwise reasonable batch size unaffordable, which shows up as out-of-memory errors or, on Aura, a quarantined instance rather than a clean failure.
+
+Work per row grows with:
+
+- merging or matching on properties that are neither indexed nor constrained, which turns each row into a scan;
+- relationship targets whose endpoints are matched on non-key properties;
+- custom queries that expand each row into a large subgraph.
+
+If a target runs out of memory, lower its batch size first, then reduce what each row does: select only the columns you need in the source query, and index the properties you match on.
+
+end::memory[]
+
+
+tag::checklist[]
+
+[#import-checklist]
+== Checklist for a re-runnable import
+
+. Create key or uniqueness constraints on the properties you merge on, either in the target `schema` or ahead of the job, and check the logs for schema errors.
+. Use `"write_mode": "merge"` rather than `"create"` so that a replayed batch or bundle updates instead of duplicating.
+. Leave `relationship_target_parallelism` and `query_target_parallelism` at `1` unless you know concurrent batches cannot touch the same nodes.
+. Add `depends_on` to custom query targets that expect nodes or relationships to already exist.
+. Size batch sizes to the server's heap, remembering that a batch is also the amount of work a single failure discards.
+. Assume the job is at-least-once: if a run fails, either re-run an idempotent import or clean up the committed rows first.
+
+end::checklist[]
