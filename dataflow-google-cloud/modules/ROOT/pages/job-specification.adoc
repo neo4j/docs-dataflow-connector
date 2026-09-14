@@ -52,7 +52,7 @@ The default column delimiter and line separator are set depending on the specifi
 To retrieve the Google Storage location of a file in a Cloud bucket, expand the file options through the three dots on the right, and choose `Copy gsutil URI`.
 
 [.shadow]
-image::image$google-cloud-file-url.png[width=600]
+image::image$google-cloud-file-url.png["Screenshot of the Google Cloud Storage file options menu with the 'Copy gsutil URI' option highlighted",width=600]
 ====
 +
 - `format` (string) -- The format of the provided CSV file. +

@@ -48,7 +48,7 @@ Both entities and relationships have extra details attached to each of them.
 The data is sourced from the following files: xref:common-content-dataflow:ROOT:attachment$persons.csv[persons.csv], xref:common-content-dataflow:ROOT:attachment$movies.csv[movies.csv], xref:common-content-dataflow:ROOT:attachment$acted_in.csv[acted_in.csv], xref:common-content-dataflow:ROOT:attachment$directed.csv[directed.csv].
 
 [.shadow]
-image::{common}:image$movies-model.png[width=400]
+image::{common}:image$movies-model.png["Graph data model showing a Person node connected to a Movie node by two relationships, ACTED_IN and DIRECTED",width=400]
 
 The next sections break it down and provide in-context information for each part.
 We recommend reading this guide side by side with the job specification example.
