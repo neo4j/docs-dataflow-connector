@@ -24,7 +24,7 @@ Within a step, the template:
 Node and relationship targets use a generated statement that starts with `UNWIND $rows AS row`, followed by `CREATE` or `MERGE` depending on the target's `write_mode`.
 Custom query targets receive the same `$rows` list and run the query you wrote.
 
-For example, a node target importing 1 million rows with a batch size of `5000` commits around 200 independent transactions, and the parallelism setting caps how many of them can be in flight at once for that target.
+For example, a node target importing 1 million rows with a batch size of `5000` commits around 200 independent transactions, and the parallelism setting caps how many of them can be in flight at once per worker for that target.
 
 [NOTE]
 ====
