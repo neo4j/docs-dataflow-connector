@@ -1,0 +1,34 @@
+= Transactions, retries, and partial failures
+
+include::{common}:partial$transactions.adoc[tags=intro]
+
+include::{common}:partial$transactions.adoc[tags=model]
+
+include::{common}:partial$transactions.adoc[tags=ordering]
+
+include::{common}:partial$transactions.adoc[tags=partial-failures]
+
+include::{common}:partial$transactions.adoc[tags=retries]
+
+include::{common}:partial$transactions.adoc[tags=merge-safety]
+
+[#bad-rows]
+== Rows that fail before Neo4j
+
+The template has no dead-letter queue: rows that cannot be imported are not written to Cloud Storage or to another table for later inspection.
+A row either reaches Neo4j, is dropped with a log entry, or fails its bundle.
+
+For BigQuery sources:
+
+- Values of a type the template cannot convert cause an exception, which fails the bundle and, after the <<bundle-retries,bundle retries>>, the job.
+Convert or exclude such columns in the source query instead. See xref:data-type-conversions.adoc[] for the supported types.
+- Values that convert to Cypher `null` are written as `null`, with a warning in the job logs.
+For a non-key property this means the property is not stored; for a key property, the write fails.
+- Rows that violate a constraint fail their batch, and therefore the whole bundle.
+Filter them out in the source query, or use the `where` attribute of a xref:job-specification.adoc#source-transformations[source transformation].
+
+Because a single unimportable row can fail the entire job after committing part of the data, validate and filter in the source query rather than relying on the import to skip bad rows.
+
+include::{common}:partial$transactions.adoc[tags=memory]
+
+include::{common}:partial$transactions.adoc[tags=checklist]
