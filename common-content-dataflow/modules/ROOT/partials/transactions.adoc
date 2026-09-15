@@ -169,17 +169,8 @@ tag::merge-safety[]
 == Making writes idempotent
 
 Because both retry levels replay rows, an import that can be re-run safely needs `"write_mode": "merge"` *and* a constraint on the properties it merges on.
+Without a constraint, concurrent `MERGE` statements can create duplicates; see link:https://neo4j.com/docs/cypher-manual/current/clauses/merge/#merge-with-constraints[Cypher -> Using MERGE with constraints].
 
-[#merge-constraints]
-=== MERGE without a constraint can duplicate
-
-`MERGE` performs a match and, if nothing matches, a create.
-Nothing makes that pair atomic across concurrent transactions unless a key or uniqueness constraint exists on the merged properties.
-Two batches merging the same key at the same time can both fail to match and both create, leaving two entities and no error.
-
-This is the most common cause of silent duplication: the job succeeds, the row counts look right, and the graph has duplicates.
-
-[TIP]
 Declare `key_constraints` or `unique_constraints` in the target's `schema` object so the template creates them before that target's rows are written, or create them in the database ahead of the job.
 
 [#merge-contention]
