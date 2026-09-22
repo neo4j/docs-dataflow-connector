@@ -34,11 +34,12 @@ The middle one is the least obvious: the template builds its pipeline on a **lau
 | Launcher VM +
 (pipeline construction)
 | The worker service account
-| Reads the job specification from Cloud Storage. Resolves the Neo4j connection metadata, from Secret Manager or Cloud Storage. Connects to Neo4j to verify connectivity, apply `reset_db`, and create all constraints and indexes.
+| Constructs the https://docs.cloud.google.com/dataflow/docs/concepts/beam-programming-model[Apache Beam®] Neo4j import pipeline. No connectivity to sources or to Neo4j is needed at this stage.
 
 | Worker VMs
 | The worker service account
-| Read the source data. Connect to Neo4j to write nodes and relationships.
+| Reads the job specification from Cloud Storage. Resolves the Neo4j connection metadata, from Secret Manager or Cloud Storage. Connects to Neo4j to verify connectivity, apply `reset_db` if applicable, and create all constraints and indexes.
+Then reads the source data and connects to Neo4j to write nodes and relationships.
 |===
 
 The launcher VM uses the **same service account and the same network** as the worker VMs.
