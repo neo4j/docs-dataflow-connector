@@ -43,9 +43,6 @@ Two batches of the same target can process rows with the same key at the same ti
 Raising a parallelism setting increases both throughput and the chance of that overlap.
 ====
 
-Older job specifications may use the settings `node_write_batch_size`, `edge_write_batch_size`, `custom_query_batch_size`, `node_write_parallelism`, `edge_write_parallelism`, and `custom_query_parallelism`.
-The template still accepts those names, but prefer the current ones.
-
 end::model[]
 
 
@@ -65,13 +62,6 @@ It is *not* automatically scheduled after all nodes and relationships.
 If your query assumes imported entities already exist, declare that with `depends_on`.
 
 Indexes and constraints declared in a target's `schema` object are created before that target's rows are written.
-
-[WARNING]
-====
-If a schema statement fails, the error is logged and the import continues without that index or constraint.
-A `MERGE`-based import that relies on a constraint for correctness then runs unprotected.
-Check the job logs for schema errors, or create the constraints ahead of the job.
-====
 
 end::ordering[]
 
@@ -220,7 +210,7 @@ tag::checklist[]
 [#import-checklist]
 == Checklist for a re-runnable import
 
-. Create key or uniqueness constraints on the properties you merge on, either in the target `schema` or ahead of the job, and check the logs for schema errors.
+. Create key or uniqueness constraints on the properties you merge on, either in the target `schema` or ahead of the job.
 . Use `"write_mode": "merge"` rather than `"create"` so that a replayed batch or bundle updates instead of duplicating.
 . Leave `relationship_target_parallelism` and `query_target_parallelism` at `1` unless you know concurrent batches cannot touch the same nodes.
 . Add `depends_on` to custom query targets that expect nodes or relationships to already exist.
