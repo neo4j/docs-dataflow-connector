@@ -157,7 +157,7 @@ The outcome depends on how the target is configured:
 | Duplicate nodes or relationships, always. `CREATE` has no notion of an existing row.
 
 | Custom query target
-| Depends entirely on the query. Only an idempotent query survives a retry.
+| Depends entirely on the query. Only an idempotent query behaves well with a retry.
 |===
 
 end::retries[]
