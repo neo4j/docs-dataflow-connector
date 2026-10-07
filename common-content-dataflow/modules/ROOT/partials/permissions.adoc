@@ -34,7 +34,7 @@ The middle one is the least obvious: the template builds its pipeline on a **lau
 | Launcher VM +
 (pipeline construction)
 | The worker service account
-| Constructs the https://docs.cloud.google.com/dataflow/docs/concepts/beam-programming-model[Apache Beam®] Neo4j import pipeline. No connectivity to sources or to Neo4j is needed at this stage.
+| Constructs the logical Neo4j import pipeline. No connectivity to sources or to Neo4j is needed at this stage.
 
 | Worker VMs
 | The worker service account
